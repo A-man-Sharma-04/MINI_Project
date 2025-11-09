@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up — CommunityHub</title>
+  <meta name="description" content="Create a free CommunityHub account to organize events, report issues, and stay connected.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .login-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      width: 100%;
+      max-width: 480px;
+      overflow: hidden;
+    }
+    .login-header {
+      text-align: center;
+      padding: 2.5rem 2rem 1.5rem;
+      background: white;
+    }
+    .logo {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 0.5rem;
+    }
+    .logo span {
+      color: #3b82f6;
+    }
+    .subtitle {
+      color: #64748b;
+      font-size: 1rem;
+    }
+
+    .login-body {
+      padding: 0 2rem 2rem;
+    }
+
+    /* Form Group */
+    .form-group {
+      margin-bottom: 1.4rem;
+      position: relative;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #334155;
+      font-size: 0.95rem;
+    }
+
+    /* === Unified Input with Icons === */
+    .input-container {
+      position: relative;
+      width: 100%;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.9rem 44px; /* 44px = safe space for icons on both sides */
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .form-input.error {
+      border-color: #ef4444;
+    }
+
+    /* Icons inside input */
+    .input-icon {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a8c2;
+    }
+
+    .input-icon.left {
+      left: 14px;
+    }
+
+    .input-icon.right {
+      right: 14px;
+      cursor: pointer;
+    }
+
+    /* Error text */
+    .error-text {
+      color: #ef4444;
+      font-size: 0.85rem;
+      margin-top: 0.3rem;
+      display: none;
+    }
+    .error-text.show {
+      display: block;
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 0.95rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+
+    .footer-links {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: #64748b;
+      font-size: 0.95rem;
+    }
+    .footer-links a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .footer-links a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .login-header {
+        padding: 2rem 1.5rem 1.2rem;
+      }
+      .login-body {
+        padding: 0 1.5rem 1.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-header">
+      <div class="logo">Community<span>Hub</span></div>
+      <p class="subtitle">Create your free account</p>
+    </div>
+
+    <div class="login-body">
+      <form id="register-form">
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <div class="input-container">
+            <i class="fas fa-user input-icon left"></i>
+            <input 
+              type="text" 
+              id="name" 
+              class="form-input" 
+              placeholder="John Doe"
+              autocomplete="name"
+            >
+          </div>
+          <div class="error-text" id="name-error">Please enter your full name</div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <div class="input-container">
+            <i class="fas fa-envelope input-icon left"></i>
+            <input 
+              type="email" 
+              id="email" 
+              class="form-input" 
+              placeholder="you@example.com"
+              autocomplete="email"
+            >
+          </div>
+          <div class="error-text" id="email-error">Please enter a valid email</div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-container">
+            <i class="fas fa-lock input-icon left"></i>
+            <input 
+              type="password" 
+              id="password" 
+              class="form-input" 
+              placeholder="••••••••"
+              autocomplete="new-password"
+            >
+            <i class="fas fa-eye input-icon right toggle-password" id="togglePassword"></i>
+          </div>
+          <div class="error-text" id="password-error">At least 8 characters with a letter and number</div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirm_password">Confirm Password</label>
+          <div class="input-container">
+            <i class="fas fa-lock input-icon left"></i>
+            <input 
+              type="password" 
+              id="confirm_password" 
+              class="form-input" 
+              placeholder="••••••••"
+              autocomplete="new-password"
+            >
+            <i class="fas fa-eye input-icon right toggle-password" id="toggleConfirmPassword"></i>
+          </div>
+          <div class="error-text" id="confirm-error">Passwords do not match</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-user-plus"></i>
+          Create Account
+        </button>
+      </form>
+
+      <div class="footer-links">
+        Already have an account? <a href="login.html">Sign In</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Toggle password visibility for both fields
+    document.getElementById('togglePassword').addEventListener('click', function () {
+      togglePasswordVisibility('password', this);
+    });
+
+    document.getElementById('toggleConfirmPassword').addEventListener('click', function () {
+      togglePasswordVisibility('confirm_password', this);
+    });
+
+    function togglePasswordVisibility(inputId, icon) {
+      const input = document.getElementById(inputId);
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      icon.classList.toggle('fa-eye', isPassword);
+      icon.classList.toggle('fa-eye-slash', !isPassword);
+    }
+
+    // Form validation
+    document.getElementById('register-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm_password').value;
+      let valid = true;
+
+      // Reset errors
+      document.querySelectorAll('.error-text').forEach(el => el.classList.remove('show'));
+      document.querySelectorAll('.form-input').forEach(el => el.classList.remove('error'));
+
+      // Validate name
+      if (!name) {
+        showError('name', 'Full name is required');
+        valid = false;
+      }
+
+      // Validate email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email)) {
+        showError('email', 'Please enter a valid email');
+        valid = false;
+      }
+
+      // Validate password: min 8 chars, at least 1 letter + 1 number
+      const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+      if (!passwordRegex.test(password)) {
+        showError('password', 'At least 8 characters with a letter and number');
+        valid = false;
+      }
+
+      // Validate confirm
+      if (password !== confirm) {
+        showError('confirm', 'Passwords do not match');
+        valid = false;
+      }
+
+      if (valid) {
+        alert('Account created successfully! (Demo)');
+        // Later: this.submit() to register.php
+        // window.location.href = 'dashboard.html';
+      }
+    });
+
+    function showError(field, message) {
+      document.getElementById(`${field}-error`).textContent = message;
+      document.getElementById(`${field}-error`).classList.add('show');
+      document.getElementById(field).classList.add('error');
+    }
+
+    // Real-time validation helpers
+    document.getElementById('name').addEventListener('input', function() {
+      if (this.value.trim()) {
+        document.getElementById('name-error').classList.remove('show');
+        this.classList.remove('error');
+      }
+    });
+
+    document.getElementById('email').addEventListener('blur', function() {
+      const email = this.value.trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (email && !emailRegex.test(email)) {
+        showError('email', 'Invalid email format');
+      }
+    });
+
+    document.getElementById('password').addEventListener('input', function() {
+      const password = this.value;
+      const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+      const confirmPassword = document.getElementById('confirm_password').value;
+      
+      if (passwordRegex.test(password)) {
+        document.getElementById('password-error').classList.remove('show');
+        this.classList.remove('error');
+      }
+
+      // Auto-check confirm if both filled
+      if (confirmPassword && password !== confirmPassword) {
+        document.getElementById('confirm_password').classList.add('error');
+        document.getElementById('confirm-error').textContent = 'Passwords do not match';
+        document.getElementById('confirm-error').classList.add('show');
+      } else if (confirmPassword) {
+        document.getElementById('confirm_password').classList.remove('error');
+        document.getElementById('confirm-error').classList.remove('show');
+      }
+    });
+
+    document.getElementById('confirm_password').addEventListener('input', function() {
+      const password = document.getElementById('password').value;
+      const confirm = this.value;
+      const errorEl = document.getElementById('confirm-error');
+
+      if (confirm) {
+        if (password !== confirm) {
+          this.classList.add('error');
+          errorEl.textContent = 'Passwords do not match';
+          errorEl.classList.add('show');
+        } else {
+          this.classList.remove('error');
+          errorEl.classList.remove('show');
+        }
+      }
+    });
+  </script>
+</body>
+</html>

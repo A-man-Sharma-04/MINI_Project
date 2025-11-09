@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CommunityHub — Connect, Report, Organize</title>
+  <meta name="description" content="A unified platform for events, issues, notices, and reports in your community.">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- ===== COVER / LANDING PAGE ===== -->
+  <div id="cover-page" class="screen active">
+    <header class="cover-header">
+      <div class="logo">Community<span>Hub</span></div>
+        <nav>
+            <a href="login.html" class="btn btn-outline">Login</a>
+            <a href="register.html" class="btn btn-primary">Sign Up</a>
+        </nav>
+    </header>
+
+    <main class="cover-main">
+      <div class="hero-content">
+        <h1>Build Stronger Communities Together</h1>
+        <p class="subtitle">
+          Report issues, share notices, organize events, and collaborate — all in one trusted space.
+        </p>
+        <div class="cta-buttons">
+          <button class="btn-large btn-primary" onclick="register.html">Get Started — Free</button>
+          <button class="btn-large btn-outline" onclick="login.html">Log In</button>
+        </div>
+      </div>
+
+      <div class="features">
+        <div class="feature-card">
+          <div class="icon">🗓️</div>
+          <h3>Events</h3>
+          <p>Create and manage community events with registration & code of conduct.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🚨</div>
+          <h3>Issues</h3>
+          <p>Report problems like potholes, outages, or safety concerns instantly.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">📢</div>
+          <h3>Notices</h3>
+          <p>Share important announcements with your neighborhood or campus.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">📝</div>
+          <h3>Reports</h3>
+          <p>Submit confidential or public reports with full documentation.</p>
+        </div>
+      </div>
+
+      <div class="live-map-preview">
+        <h3>Live Community Map</h3>
+        <p>See real-time updates from your area — color-coded for clarity.</p>
+        <div class="map-placeholder">
+        <div class="dot event"></div>
+        <div class="dot issue"></div>
+        <div class="dot notice"></div>
+        <div class="dot report"></div>
+        <div class="legend">
+            <div><span class="legend-dot event"></span> Events</div>
+            <div><span class="legend-dot issue"></span> Issues</div>
+            <div><span class="legend-dot notice"></span> Notices</div>
+            <div><span class="legend-dot report"></span> Reports</div>
+        </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="cover-footer">
+      <p>&copy; 2025 CommunityHub. Empowering neighborhoods worldwide.</p>
+    </footer>
+  </div>
+
+  <!-- ===== DASHBOARD (Same as before, slightly updated) ===== -->
+  <div id="dashboard" class="screen">
+    <header class="dash-header">
+      <div class="logo">Community<span>Hub</span></div>
+      <button class="btn-outline" onclick="logout()">Logout</button>
+    </header>
+
+    <div class="filters">
+      <select id="status-filter" onchange="filterMapItems()">
+        <option value="all">All Status</option>
+        <option value="active">Active</option>
+        <option value="past">Past</option>
+        <option value="completed">Completed</option>
+      </select>
+      <select id="type-filter" onchange="filterMapItems()">
+        <option value="all">All Types</option>
+        <option value="event">Events</option>
+        <option value="issue">Issues</option>
+        <option value="notice">Notices</option>
+        <option value="report">Reports</option>
+      </select>
+      <input type="text" id="search" placeholder="Search..." onkeyup="filterMapItems()" />
+    </div>
+
+    <div class="main-content">
+      <div id="map"></div>
+      <div class="sidebar">
+        <div class="tab-buttons">
+          <button class="active" onclick="showTab('events')">Events</button>
+          <button onclick="showTab('issues')">Issues</button>
+          <button onclick="showTab('notices')">Notices</button>
+          <button onclick="showTab('reports')">Reports</button>
+        </div>
+        <div id="item-list"></div>
+        <button class="add-btn" onclick="showForm()">+ Add New</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Modal (Add New Item) -->
+  <div id="form-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeForm()">&times;</span>
+      <h3>Add New Item</h3>
+      <select id="form-type" onchange="toggleFormFields()">
+        <option value="event">Event</option>
+        <option value="issue">Issue</option>
+        <option value="notice">Notice</option>
+        <option value="report">Report</option>
+      </select>
+      <input type="text" id="form-title" placeholder="Title" required />
+      <textarea id="form-desc" placeholder="Description"></textarea>
+      <div id="dynamic-fields"></div>
+      <button class="btn-primary full-width" onclick="saveNewItem()">Save</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
