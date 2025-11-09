@@ -104,12 +104,55 @@
           <div class="error-text" id="password-error">Password must be at least 6 characters</div>
         </div>
 
+          <!-- 🔑 ADD THIS LINE -->
+  <div class="footer-links" style="margin: -0.5rem 0 1rem; font-size: 0.9rem;">
+    <a href="#" id="forgot-password-link">Forgot password?</a>
+  </div>
+
         <button type="submit" class="btn btn-primary">
           <i class="fas fa-sign-in-alt"></i>
           Sign In
         </button>
       </form>
-
+<!-- OTP Password Reset Flow (Hidden Initially) -->
+<div id="otp-reset-section" style="display:none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+  <h3 style="text-align:center; margin-bottom: 1rem; color:#1e40af;">Reset Your Password</h3>
+  
+  <div class="form-group">
+    <label for="reset-email">Email Address</label>
+    <div class="input-container">
+      <i class="fas fa-envelope input-icon left"></i>
+      <input 
+        type="email" 
+        id="reset-email" 
+        class="form-input" 
+        placeholder="you@example.com"
+      >
+    </div>
+  </div>
+  
+  <button type="button" class="btn btn-primary" id="send-reset-otp">
+    Send Reset Code
+  </button>
+  
+  <div id="otp-verify-section" style="display:none; margin-top: 1.5rem;">
+    <div class="form-group">
+      <label for="reset-otp">Enter 6-digit code</label>
+      <input type="text" id="reset-otp" class="form-input" maxlength="6">
+    </div>
+    <div class="form-group">
+      <label for="new-password">New Password</label>
+      <div class="input-container">
+        <i class="fas fa-lock input-icon left"></i>
+        <input type="password" id="new-password" class="form-input" placeholder="••••••••">
+        <i class="fas fa-eye input-icon right toggle-password" id="toggleNewPassword"></i>
+      </div>
+    </div>
+    <button type="button" class="btn btn-primary" id="reset-password-btn">
+      Reset Password
+    </button>
+  </div>
+</div>
       <div class="footer-links">
         Don’t have an account? <a href="register.html">Sign Up</a>
       </div>
@@ -126,6 +169,65 @@
       this.classList.toggle('fa-eye-slash');
     });
 
+// Show OTP reset section
+document.getElementById('forgot-password-link').addEventListener('click', function(e) {
+  e.preventDefault();
+  document.getElementById('otp-reset-section').style.display = 'block';
+  document.getElementById('email-login-form').style.display = 'none';
+});
+
+// Send OTP for password reset
+document.getElementById('send-reset-otp').addEventListener('click', function() {
+  const email = document.getElementById('reset-email').value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    alert('Please enter a valid email');
+    return;
+  }
+
+  fetch('auth/otp.php?action=send_reset', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert('Reset code sent! Check your email.');
+      document.getElementById('otp-verify-section').style.display = 'block';
+    } else {
+      alert('Error: ' + data.message);
+    }
+  });
+});
+
+// Reset password with OTP
+document.getElementById('reset-password-btn').addEventListener('click', function() {
+  const email = document.getElementById('reset-email').value.trim();
+  const otp = document.getElementById('reset-otp').value;
+  const newPassword = document.getElementById('new-password').value;
+  
+  if (newPassword.length < 6) {
+    alert('Password must be at least 6 characters');
+    return;
+  }
+
+  fetch('auth/reset-password.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, code: otp, new_password: newPassword })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert('Password reset successful! You can now log in.');
+      // Return to login form
+      document.getElementById('otp-reset-section').style.display = 'none';
+      document.getElementById('email-login-form').style.display = 'block';
+    } else {
+      alert('Invalid code or email. Please try again.');
+    }
+  });
+});
     // Form validation
     document.getElementById('email-login-form').addEventListener('submit', function(e) {
       e.preventDefault();
