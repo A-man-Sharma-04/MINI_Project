@@ -7,34 +7,9 @@
   <meta name="description" content="Sign in to CommunityHub to manage events, report issues, and stay updated.">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="auth.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem;
-    }
-    .login-container {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-      width: 100%;
-      max-width: 480px;
-      overflow: hidden;
-    }
-    .login-header {
-      text-align: center;
-      padding: 2.5rem 2rem 1.5rem;
-      background: white;
-    }
     .logo {
       font-size: 2rem;
       font-weight: 700;
@@ -44,82 +19,6 @@
     .logo span {
       color: #3b82f6;
     }
-    .subtitle {
-      color: #64748b;
-      font-size: 1rem;
-    }
-
-    .login-body {
-      padding: 0 2rem 2rem;
-    }
-
-    /* Form Group */
-    .form-group {
-      margin-bottom: 1.4rem;
-      position: relative;
-    }
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-      color: #334155;
-      font-size: 0.95rem;
-    }
-
-    /* === Unified Input with Icons === */
-    .input-container {
-      position: relative;
-      width: 100%;
-    }
-
-    .form-input {
-      width: 100%;
-      padding: 0.9rem 44px; /* 44px = safe space for icons on both sides */
-      border: 2px solid #e2e8f0;
-      border-radius: 12px;
-      font-size: 1rem;
-      font-family: 'Poppins', sans-serif;
-      transition: border-color 0.3s, box-shadow 0.3s;
-    }
-
-    .form-input:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-    }
-
-    .form-input.error {
-      border-color: #ef4444;
-    }
-
-    /* Icons inside input */
-    .input-icon {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #94a8c2;
-    }
-
-    .input-icon.left {
-      left: 14px;
-    }
-
-    .input-icon.right {
-      right: 14px;
-      cursor: pointer;
-    }
-
-    /* Error text */
-    .error-text {
-      color: #ef4444;
-      font-size: 0.85rem;
-      margin-top: 0.3rem;
-      display: none;
-    }
-    .error-text.show {
-      display: block;
-    }
-
     /* Buttons */
     .btn {
       width: 100%;
@@ -151,48 +50,6 @@
     .btn-google:hover {
       background: #f8fafc;
       border-color: #cbd5e1;
-    }
-
-    .divider {
-      display: flex;
-      align-items: center;
-      margin: 1.5rem 0;
-      color: #94a3b8;
-      font-size: 0.9rem;
-    }
-    .divider::before,
-    .divider::after {
-      content: "";
-      flex: 1;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    .divider span {
-      padding: 0 0.75rem;
-    }
-
-    .footer-links {
-      text-align: center;
-      margin-top: 1.5rem;
-      color: #64748b;
-      font-size: 0.95rem;
-    }
-    .footer-links a {
-      color: #3b82f6;
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .footer-links a:hover {
-      text-decoration: underline;
-    }
-
-    /* Responsive */
-    @media (max-width: 480px) {
-      .login-header {
-        padding: 2rem 1.5rem 1.2rem;
-      }
-      .login-body {
-        padding: 0 1.5rem 1.8rem;
-      }
     }
   </style>
 </head>

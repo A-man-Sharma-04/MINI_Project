@@ -1,8 +1,4 @@
-let isLoggedIn = false;
-let currentAuthMode = 'login'; // 'login' or 'register'
-
-// Mock user DB (in real app: replace with API calls)
-let users = [];
+// Mock data (will be replaced by API later)
 let items = [
   { id: 1, type: 'event', title: 'Neighborhood Cleanup', desc: 'Join us this Saturday!', datetime: '2025-11-16T09:00', location: [28.6139, 77.2090], status: 'active' },
   { id: 2, type: 'issue', title: 'Flooded Street', desc: 'After heavy rain near Market Rd', location: [28.6200, 77.2100], status: 'active' },
@@ -13,20 +9,18 @@ let items = [
 let map;
 let markers = [];
 
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
   renderItemList('events');
 });
 
-
-// === DASHBOARD FUNCTIONS (same as before) ===
 function initMap() {
-  if (!map) {
-    map = L.map('map').setView([28.6139, 77.2090], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-  }
+  map = L.map('map').setView([28.6139, 77.2090], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+  refreshMap();
 }
 
 function getColor(type) {
@@ -98,9 +92,9 @@ function renderItemList(tab, type = null) {
   `).join('');
 }
 
-// === FORM MODAL ===
+// Modal
 function showForm() {
-  document.getElementById('form-modal').style.display = 'flex';
+  document.getElementById('form-modal').style.display = 'block';
   toggleFormFields();
 }
 
@@ -171,7 +165,7 @@ function saveNewItem() {
 }
 
 function logout() {
-  isLoggedIn = false;
-  document.getElementById('dashboard').classList.remove('active');
-  document.getElementById('cover-page').classList.add('active');
+  if (confirm('Are you sure you want to log out?')) {
+    window.location.href = 'index.html';
+  }
 }

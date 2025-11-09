@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — CommunityHub</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="global.css">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <meta name="description" content="Manage community events, report issues, and stay connected with CommunityHub's interactive dashboard.">
+</head>
+<body>
+  <div id="dashboard">
+    <header class="dash-header">
+      <div class="logo">Community<span>Hub</span></div>
+      <button class="btn btn-outline" onclick="logout()">Logout</button>
+    </header>
+
+    <div class="filters">
+      <select id="status-filter" onchange="filterMapItems()">
+        <option value="all">All Status</option>
+        <option value="active">Active</option>
+        <option value="past">Past</option>
+        <option value="completed">Completed</option>
+      </select>
+      <select id="type-filter" onchange="filterMapItems()">
+        <option value="all">All Types</option>
+        <option value="event">Events</option>
+        <option value="issue">Issues</option>
+        <option value="notice">Notices</option>
+        <option value="report">Reports</option>
+      </select>
+      <input type="text" id="search" placeholder="Search..." onkeyup="filterMapItems()" />
+    </div>
+
+    <div class="main-content">
+      <div id="map"></div>
+      <div class="sidebar">
+        <div class="tab-buttons">
+          <button class="active" onclick="showTab('events')">Events</button>
+          <button onclick="showTab('issues')">Issues</button>
+          <button onclick="showTab('notices')">Notices</button>
+          <button onclick="showTab('reports')">Reports</button>
+        </div>
+        <div id="item-list"></div>
+        <button class="add-btn" onclick="showForm()">+ Add New</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Modal -->
+  <div id="form-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeForm()">&times;</span>
+      <h3>Add New Item</h3>
+      <select id="form-type" onchange="toggleFormFields()">
+        <option value="event">Event</option>
+        <option value="issue">Issue</option>
+        <option value="notice">Notice</option>
+        <option value="report">Report</option>
+      </select>
+      <input type="text" id="form-title" placeholder="Title" required />
+      <textarea id="form-desc" placeholder="Description"></textarea>
+      <div id="dynamic-fields"></div>
+      <button class="btn btn-primary" onclick="saveNewItem()">Save</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

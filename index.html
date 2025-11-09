@@ -26,10 +26,10 @@
         <p class="subtitle">
           Report issues, share notices, organize events, and collaborate — all in one trusted space.
         </p>
-        <div class="cta-buttons">
-          <button class="btn-large btn-primary" onclick="register.html">Get Started — Free</button>
-          <button class="btn-large btn-outline" onclick="login.html">Log In</button>
-        </div>
+          <div class="cta-buttons">
+            <a href="register.html" class="btn btn-large btn-primary">Get Started — Free</a>
+            <a href="login.html" class="btn btn-large btn-outline">Log In</a>
+          </div>
       </div>
 
       <div class="features">
@@ -57,7 +57,7 @@
 
       <div class="live-map-preview">
         <h3>Live Community Map</h3>
-        <p>See real-time updates from your area — color-coded for clarity.</p>
+        <p>See real-time updates from your area in a dynamic map.</p>
         <div class="map-placeholder">
         <div class="dot event"></div>
         <div class="dot issue"></div>
@@ -78,62 +78,6 @@
     </footer>
   </div>
 
-  <!-- ===== DASHBOARD (Same as before, slightly updated) ===== -->
-  <div id="dashboard" class="screen">
-    <header class="dash-header">
-      <div class="logo">Community<span>Hub</span></div>
-      <button class="btn-outline" onclick="logout()">Logout</button>
-    </header>
-
-    <div class="filters">
-      <select id="status-filter" onchange="filterMapItems()">
-        <option value="all">All Status</option>
-        <option value="active">Active</option>
-        <option value="past">Past</option>
-        <option value="completed">Completed</option>
-      </select>
-      <select id="type-filter" onchange="filterMapItems()">
-        <option value="all">All Types</option>
-        <option value="event">Events</option>
-        <option value="issue">Issues</option>
-        <option value="notice">Notices</option>
-        <option value="report">Reports</option>
-      </select>
-      <input type="text" id="search" placeholder="Search..." onkeyup="filterMapItems()" />
-    </div>
-
-    <div class="main-content">
-      <div id="map"></div>
-      <div class="sidebar">
-        <div class="tab-buttons">
-          <button class="active" onclick="showTab('events')">Events</button>
-          <button onclick="showTab('issues')">Issues</button>
-          <button onclick="showTab('notices')">Notices</button>
-          <button onclick="showTab('reports')">Reports</button>
-        </div>
-        <div id="item-list"></div>
-        <button class="add-btn" onclick="showForm()">+ Add New</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Form Modal (Add New Item) -->
-  <div id="form-modal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeForm()">&times;</span>
-      <h3>Add New Item</h3>
-      <select id="form-type" onchange="toggleFormFields()">
-        <option value="event">Event</option>
-        <option value="issue">Issue</option>
-        <option value="notice">Notice</option>
-        <option value="report">Report</option>
-      </select>
-      <input type="text" id="form-title" placeholder="Title" required />
-      <textarea id="form-desc" placeholder="Description"></textarea>
-      <div id="dynamic-fields"></div>
-      <button class="btn-primary full-width" onclick="saveNewItem()">Save</button>
-    </div>
-  </div>
 
   <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
