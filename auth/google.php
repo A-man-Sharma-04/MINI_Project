@@ -2,7 +2,19 @@
 // auth/google.php
 require_once 'config.php';
 require_once 'db.php';
+require_once 'rate-limit.php';
 
+$rateLimiter = new RateLimiter();
+$ip = $_SERVER['REMOTE_ADDR'];
+
+// Rate limit: max 10 Google OAuth requests per IP per hour
+if ($rateLimiter->isRateLimited($ip, 'google_oauth', 10, 3600)) {
+    die('Too many requests. Please try again later.');
+}
+
+$rateLimiter->recordRequest($ip, 'google_oauth');
+
+// Get auth code
 $auth_code = $_GET['code'] ?? null;
 
 if (!$auth_code) {
