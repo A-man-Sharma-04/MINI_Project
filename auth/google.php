@@ -3,9 +3,6 @@
 require_once 'config.php';
 require_once 'db.php';
 
-// Use Google API Client (install via: composer require google/apiclient)
-// If you don't want Composer, use manual OAuth flow (simpler below)
-
 $auth_code = $_GET['code'] ?? null;
 
 if (!$auth_code) {
@@ -34,17 +31,25 @@ curl_setopt_array($ch, [
         'grant_type' => 'authorization_code',
         'redirect_uri' => GOOGLE_REDIRECT_URI
     ]),
-    CURLOPT_RETURNTRANSFER => true
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_SSL_VERIFYPEER => false, // Only for localhost
+    CURLOPT_SSL_VERIFYHOST => false  // Only for localhost
 ]);
 $response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
+
+if ($httpCode !== 200) {
+    error_log("Google token error: $response");
+    die("Authentication failed. Please try again.");
+}
 
 $token_data = json_decode($response, true);
 if (!isset($token_data['id_token'])) {
     die("Google auth failed.");
 }
 
-// Verify ID token (simplified — in prod, verify signature)
+// Verify ID token (simplified)
 $payload = explode('.', $token_data['id_token'])[1];
 $payload = json_decode(base64_decode(str_pad(strtr($payload, '-_', '+/'), strlen($payload) % 4, '=', STR_PAD_RIGHT)), true);
 
@@ -60,8 +65,10 @@ $db = getDB();
 $stmt = $db->prepare("SELECT id FROM users WHERE email = ?");
 $stmt->execute([$email]);
 $user = $stmt->fetch();
+
 if (!$user) {
-    $db->prepare("INSERT INTO users (email, name) VALUES (?, ?)")->execute([$email, $name]);
+    $stmt = $db->prepare("INSERT INTO users (email, name) VALUES (?, ?)");
+    $stmt->execute([$email, $name]);
     $user_id = $db->lastInsertId();
 } else {
     $user_id = $user['id'];
@@ -71,5 +78,5 @@ $_SESSION['user_id'] = $user_id;
 $_SESSION['email'] = $email;
 $_SESSION['name'] = $name;
 
-header('Location: /dashboard.html');
+header('Location: ../dashboard.html');
 exit;

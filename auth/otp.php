@@ -3,6 +3,7 @@
 require_once 'config.php';
 require_once 'db.php';
 
+// Set content type before ANY output
 header('Content-Type: application/json');
 
 $data = json_decode(file_get_contents('php://input'), true);
@@ -24,7 +25,7 @@ if ($action === 'send') {
     $otp_hash = password_hash($otp, PASSWORD_DEFAULT);
     $expires = date('Y-m-d H:i:s', strtotime('+5 minutes'));
 
-    $stmt = $db->prepare("REPLACE INTO otps (email, code_hash, expires_at) VALUES (?, ?, ?)");
+    $stmt = $db->prepare("REPLACE INTO otps (email, code_hash, expires_at, purpose) VALUES (?, ?, ?, 'login')");
     $stmt->execute([$email, $otp_hash, $expires]);
 
     $stmt = $db->prepare("SELECT name FROM users WHERE email = ?");
@@ -35,9 +36,11 @@ if ($action === 'send') {
     // Send email via Brevo
     $ch = curl_init();
     curl_setopt_array($ch, [
-        CURLOPT_URL => "https://api.brevo.com/v3/smtp/email",
+        CURLOPT_URL => "https://api.brevo.com/v3/smtp/email", // Fixed: removed trailing spaces
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
+        CURLOPT_SSL_VERIFYPEER => false, // For localhost
+        CURLOPT_SSL_VERIFYHOST => false, // For localhost
         CURLOPT_HTTPHEADER => [
             "api-key: " . BREVO_API_KEY,
             "accept: application/json",
@@ -45,9 +48,13 @@ if ($action === 'send') {
         ],
         CURLOPT_POSTFIELDS => json_encode([
             "to" => [["email" => $email, "name" => $name]],
-            "sender" => ["email" => "no-reply@yourdomain.com", "name" => "CommunityHub"],
-            "subject" => "Your Login Code",
-            "htmlContent" => "<h2>Hello $name,</h2><p>Your one-time code is: <strong>$otp</strong></p><p>Valid for 5 minutes.</p>"
+            "sender" => ["email" => "desksharma113114@gmail.com", "name" => "CommunityHub"],
+            "subject" => "Your CommunityHub Login Code",
+            "templateId" => 2, 
+            "params" => [
+                "name" => $name,
+                "otp" => $otp
+            ]
         ])
     ]);
 
@@ -71,20 +78,25 @@ if ($action === 'send') {
         exit;
     }
 
-    $stmt = $db->prepare("SELECT code_hash FROM otps WHERE email = ? AND expires_at > NOW()");
+    // Verify OTP for login purpose only
+    $stmt = $db->prepare("SELECT code_hash FROM otps WHERE email = ? AND purpose = 'login' AND expires_at > NOW()");
     $stmt->execute([$email]);
     $row = $stmt->fetch();
 
-    if (!$row || !password_verify($code, $row['code_hash'])) {
+    // Safe check: ensure code_hash exists before verifying
+    if (!$row || !$row['code_hash'] || !password_verify($code, $row['code_hash'])) {
         echo json_encode(['success' => false, 'message' => 'Invalid or expired code']);
         exit;
     }
 
-    $db->prepare("DELETE FROM otps WHERE email = ?")->execute([$email]);
+    // Delete used OTP
+    $db->prepare("DELETE FROM otps WHERE email = ? AND purpose = 'login'")->execute([$email]);
 
-    $stmt = $db->prepare("SELECT name FROM users WHERE email = ?");
+    // Get or create user
+    $stmt = $db->prepare("SELECT id, name FROM users WHERE email = ?");
     $stmt->execute([$email]);
     $user = $stmt->fetch();
+    
     if (!$user) {
         $name = strstr($email, '@', true);
         $db->prepare("INSERT INTO users (email, name) VALUES (?, ?)")->execute([$email, $name]);
@@ -99,9 +111,8 @@ if ($action === 'send') {
     $_SESSION['name'] = $name;
 
     echo json_encode(['success' => true]);
-
 } 
- elseif ($action === 'send_reset') {
+elseif ($action === 'send_reset') {
     // Password reset OTP
     if (!$email) {
         http_response_code(400);
@@ -132,9 +143,11 @@ if ($action === 'send') {
     $name = strstr($email, '@', true);
     $ch = curl_init();
     curl_setopt_array($ch, [
-        CURLOPT_URL => "https://api.brevo.com/v3/smtp/email",
+        CURLOPT_URL => "https://api.brevo.com/v3/smtp/email", // Fixed: removed trailing spaces
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
+        CURLOPT_SSL_VERIFYPEER => false, // For localhost
+        CURLOPT_SSL_VERIFYHOST => false, // For localhost
         CURLOPT_HTTPHEADER => [
             "api-key: " . BREVO_API_KEY,
             "accept: application/json",
@@ -142,9 +155,13 @@ if ($action === 'send') {
         ],
         CURLOPT_POSTFIELDS => json_encode([
             "to" => [["email" => $email, "name" => $name]],
-            "sender" => ["email" => "no-reply@yourdomain.com", "name" => "CommunityHub"],
+            "sender" => ["email" => "desksharma113114@gmail.com", "name" => "CommunityHub"],
             "subject" => "Password Reset Code",
-            "htmlContent" => "<h2>Password Reset Request</h2><p>Your code: <strong>$otp</strong></p><p>Valid for 5 minutes.</p>"
+            "templateId" => 2, 
+            "params" => [
+                "name" => $name,
+                "otp" => $otp
+            ]
         ])
     ]);
 
@@ -160,3 +177,4 @@ else {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Invalid action']);
 }
+?>

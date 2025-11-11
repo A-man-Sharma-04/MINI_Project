@@ -16,6 +16,7 @@ function getDB() {
                     PDO::ATTR_EMULATE_PREPARES => false,
                 ]
             );
+            $pdo->exec("SET time_zone = '+00:00'");
         } catch (PDOException $e) {
             error_log("DB Error: " . $e->getMessage());
             http_response_code(500);

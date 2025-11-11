@@ -1,0 +1,1 @@
+<?php echo "Server time: " . date('Y-m-d H:i:s') . "\nLocal time: " . gmdate('Y-m-d H:i:s'); ?>
