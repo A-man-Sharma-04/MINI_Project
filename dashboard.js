@@ -239,6 +239,34 @@ function renderMapItems(items) {
     });
 }
 
+// dashboard.js
+
+// ... other functions ...
+
+// Function to load user-specific data (e.g., stats, settings) for the dashboard
+async function loadUserData() {
+    // Example: Load user stats for the home page
+    if (!currentUser) {
+        console.warn("Cannot load user data: user not authenticated yet.");
+        return; // Exit if currentUser is not set
+    }
+
+    try {
+        // Example API call - adjust endpoint as needed
+        // const response = await fetch(`api/user-stats.php?user_id=${currentUser.id}`);
+        // const data = await response.json();
+        // if (data.success) {
+        //     // Update UI elements with user stats
+        //     document.getElementById('user-stats-element').textContent = data.stats.someValue;
+        // }
+        console.log("Loading user data for dashboard..."); // Placeholder
+    } catch (error) {
+        console.error('Failed to load user data:', error);
+        // Optionally handle errors, e.g., show a message to the user
+    }
+}
+
+// ... rest of your dashboard.js functions ...
 // Load feed items
 async function loadFeedItems(view) {
     try {
