@@ -3,72 +3,260 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard — CommunityHub</title>
+  <title>CommunityHub Dashboard</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="dashboard.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <meta name="description" content="Manage community events, report issues, and stay connected with CommunityHub's interactive dashboard.">
+  <link rel="stylesheet" href="dashboard.css"> <!-- Link to the new, simpler CSS -->
+  <meta name="description" content="Manage community events, report issues, and stay connected with CommunityHub's interactive dashboard.">
 </head>
 <body>
-  <div id="dashboard">
-    <header class="dash-header">
+  <!-- Header with navigation -->
+  <header class="dashboard-header">
+    <div class="header-left">
       <div class="logo">Community<span>Hub</span></div>
-      <button class="btn btn-outline" onclick="logout()">Logout</button>
-    </header>
 
-    <div class="filters">
-      <select id="status-filter" onchange="filterMapItems()">
-        <option value="all">All Status</option>
-        <option value="active">Active</option>
-        <option value="past">Past</option>
-        <option value="completed">Completed</option>
-      </select>
-      <select id="type-filter" onchange="filterMapItems()">
-        <option value="all">All Types</option>
-        <option value="event">Events</option>
-        <option value="issue">Issues</option>
-        <option value="notice">Notices</option>
-        <option value="report">Reports</option>
-      </select>
-      <input type="text" id="search" placeholder="Search..." onkeyup="filterMapItems()" />
-    </div>
-
-    <div class="main-content">
-      <div id="map"></div>
-      <div class="sidebar">
-        <div class="tab-buttons">
-          <button class="active" onclick="showTab('events')">Events</button>
-          <button onclick="showTab('issues')">Issues</button>
-          <button onclick="showTab('notices')">Notices</button>
-          <button onclick="showTab('reports')">Reports</button>
-        </div>
-        <div id="item-list"></div>
-        <button class="add-btn" onclick="showForm()">+ Add New</button>
+      <!-- Search Bar (Visible on all tabs) -->
+      <div class="search-container">
+        <input type="text" id="global-search" placeholder="Search..." />
+        <button class="search-btn">🔍</button>
       </div>
     </div>
-  </div>
 
-  <!-- Form Modal -->
+    <div class="header-right">
+      <!-- Notifications -->
+      <button class="header-icon-btn" id="notifications-btn">
+        <span class="notification-badge">3</span>🔔
+      </button>
+
+      <!-- Profile Dropdown -->
+      <div class="profile-dropdown">
+        <button class="profile-btn" id="profile-trigger">
+          <span id="user-initial">U</span>
+        </button>
+        <div class="dropdown-menu" id="profile-menu" style="display: none;">
+          <div class="dropdown-header">
+            <div class="user-info">
+              <div class="user-initial-large" id="user-initial-large">U</div>
+              <div>
+                <div id="user-name-display">User Name</div>
+                <div class="user-email" id="user-email-display">user@example.com</div>
+              </div>
+            </div>
+          </div>
+          <hr class="dropdown-divider">
+          <a href="profile.html" class="dropdown-item">My Profile</a> <!-- Link to dedicated profile page -->
+          <a href="#" class="dropdown-item">Settings</a>
+          <a href="#" class="dropdown-item">Rewards</a>
+          <hr class="dropdown-divider">
+          <a href="#" class="dropdown-item logout-btn" onclick="logout()">Logout</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Navigation Tabs -->
+  <nav class="main-nav">
+    <button class="nav-btn active" data-tab="home">🏠 Home</button>
+    <button class="nav-btn" data-tab="map">🗺️ Map</button>
+    <button class="nav-btn" data-tab="feed">📰 Feed</button>
+    <button class="nav-btn" data-tab="trending">🔥 Trending</button>
+    <!-- Removed profile tab from main nav -->
+  </nav>
+
+  <!-- Tab Content Container -->
+  <main class="tab-content-container">
+    <!-- Home Tab -->
+    <section id="home-tab" class="tab-content active">
+      <div class="home-welcome">
+        <h2>Welcome back, <span id="home-user-name">User</span>!</h2>
+        <p>What would you like to do today?</p>
+      </div>
+
+      <div class="quick-actions">
+        <button class="quick-action-btn" onclick="showForm()">
+          <span class="action-icon">➕</span>
+          <span class="action-text">Add New</span>
+        </button>
+        <button class="quick-action-btn" onclick="goToMapTab()">
+          <span class="action-icon">📍</span>
+          <span class="action-text">View Map</span>
+        </button>
+        <button class="quick-action-btn" onclick="goToFeedTab()">
+          <span class="action-icon">📰</span>
+          <span class="action-text">See Feed</span>
+        </button>
+        <button class="quick-action-btn" onclick="goToTrendingTab()">
+          <span class="action-icon">🔥</span>
+          <span class="action-text">Trending</span>
+        </button>
+      </div>
+
+      <div class="home-recent-activity">
+        <h3>Your Recent Activity</h3>
+        <div id="recent-activity-list">
+          <!-- Will be populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Map Tab -->
+    <section id="map-tab" class="tab-content">
+      <div class="map-filters">
+        <div class="filter-group">
+          <label>Type:</label>
+          <select id="map-type-filter" onchange="filterMapItems()">
+            <option value="all">All Types</option>
+            <option value="event">Events</option>
+            <option value="issue">Issues</option>
+            <option value="notice">Notices</option>
+            <option value="report">Reports</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Status:</label>
+          <select id="map-status-filter" onchange="filterMapItems()">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="in_progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Severity:</label>
+          <select id="map-severity-filter" onchange="filterMapItems()">
+            <option value="all">All Severity</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="map-container">
+        <div id="map"></div>
+        <div class="map-controls">
+          <button class="map-control-btn" onclick="centerMap()">📍</button>
+          <button class="map-control-btn" onclick="zoomIn()">+</button>
+          <button class="map-control-btn" onclick="zoomOut()">-</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feed Tab -->
+    <section id="feed-tab" class="tab-content">
+      <div class="feed-controls">
+        <div class="segmented-control">
+          <button class="segment-btn active" data-feed-view="for-you">For You</button>
+          <button class="segment-btn" data-feed-view="following">Following</button>
+        </div>
+      </div>
+
+      <div id="feed-content">
+        <div id="feed-list">
+          <!-- Will be populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Trending Tab -->
+    <section id="trending-tab" class="tab-content">
+      <div class="trending-filters">
+        <div class="filter-group">
+          <label>Location:</label>
+          <select id="trending-location-filter" onchange="loadTrendingItems()">
+            <option value="local">Local</option>
+            <option value="city">City</option>
+            <option value="state">State</option>
+            <option value="country">Country</option>
+            <option value="global">Global</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Sort By:</label>
+          <select id="trending-sort-filter" onchange="loadTrendingItems()">
+            <option value="popular">Most Popular</option>
+            <option value="recent">Most Recent</option>
+            <option value="top">Top Rated</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="trending-content">
+        <div class="trending-list" id="trending-list">
+          <!-- Will be populated by JS -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Floating Action Button -->
+  <button class="fab" onclick="showForm()">+</button>
+
+  <!-- Add Item Modal -->
   <div id="form-modal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeForm()">&times;</span>
       <h3>Add New Item</h3>
-      <select id="form-type" onchange="toggleFormFields()">
-        <option value="event">Event</option>
-        <option value="issue">Issue</option>
-        <option value="notice">Notice</option>
-        <option value="report">Report</option>
-      </select>
-      <input type="text" id="form-title" placeholder="Title" required />
-      <textarea id="form-desc" placeholder="Description"></textarea>
+
+      <div class="form-section">
+        <label for="form-type">Type</label>
+        <select id="form-type" onchange="toggleFormFields()">
+          <option value="event">Event</option>
+          <option value="issue">Issue</option>
+          <option value="notice">Notice</option>
+          <option value="report">Report</option>
+        </select>
+      </div>
+
+      <div class="form-section">
+        <label for="form-title">Title</label>
+        <input type="text" id="form-title" placeholder="Enter title" required />
+      </div>
+
+      <div class="form-section">
+        <label for="form-desc">Description</label>
+        <textarea id="form-desc" placeholder="Describe the item..." required></textarea>
+      </div>
+
+      <div class="form-section">
+        <label>Location</label>
+        <div class="location-inputs">
+          <input type="number" id="form-lat" placeholder="Latitude" step="any" />
+          <input type="number" id="form-lng" placeholder="Longitude" step="any" />
+          <button onclick="getCurrentLocation()">📍 Use Current Location</button>
+        </div>
+      </div>
+
       <div id="dynamic-fields"></div>
-      <button class="btn btn-primary" onclick="saveNewItem()">Save</button>
+
+      <div class="form-section">
+        <label for="form-severity">Severity</label>
+        <select id="form-severity">
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+          <option value="critical">Critical</option>
+        </select>
+      </div>
+
+      <div class="form-section">
+        <label for="form-images">Upload Images/Videos</label>
+        <input type="file" id="form-images" multiple accept="image/*,video/*" />
+        <div id="image-preview"></div>
+      </div>
+
+      <button class="btn btn-primary full-width" onclick="saveNewItem()">Save Item</button>
     </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="script.js"></script>
+  <script src="dashboard.js"></script> <!-- Link to the new, simpler JS -->
 </body>
 </html>

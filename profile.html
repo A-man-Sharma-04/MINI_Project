@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Profile — CommunityHub</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="profile.css"> <!-- Link to new profile CSS -->
+  <meta name="description" content="View and manage your CommunityHub profile.">
+</head>
+<body>
+  <header class="profile-header">
+    <div class="header-left">
+      <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+      <div class="logo">Community<span>Hub</span></div>
+    </div>
+    <div class="header-right">
+      <div class="user-info-small">
+        <span id="profile-user-initial">U</span>
+        <span id="profile-user-name">User Name</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <main class="profile-main">
+    <div class="profile-banner">
+      <img src="https://via.placeholder.com/800x200/3b82f6/white?text=Banner" alt="Profile Banner" class="banner-image">
+      <div class="profile-avatar-container">
+        <div class="profile-avatar-large">U</div>
+      </div>
+    </div>
+
+    <div class="profile-info">
+      <h1 id="profile-name-display">User Name</h1>
+      <p id="profile-bio">Community member passionate about local improvements.</p>
+      <div class="profile-stats">
+        <div class="stat">
+          <span class="stat-value" id="profile-posts-count">0</span>
+          <span class="stat-label">Posts</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="profile-followers-count">0</span>
+          <span class="stat-label">Followers</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="profile-following-count">0</span>
+          <span class="stat-label">Following</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-content">
+      <div class="profile-tabs">
+        <button class="profile-tab-btn active" data-profile-tab="posts">Posts</button>
+        <button class="profile-tab-btn" data-profile-tab="followers">Followers</button>
+        <button class="profile-tab-btn" data-profile-tab="following">Following</button>
+      </div>
+
+      <div class="profile-tab-content active" id="profile-posts-content">
+        <div id="profile-posts-list">
+          <!-- Will be populated by JS -->
+        </div>
+      </div>
+
+      <div class="profile-tab-content" id="profile-followers-content" style="display: none;">
+        <div id="profile-followers-list">
+          <!-- Will be populated by JS -->
+        </div>
+      </div>
+
+      <div class="profile-tab-content" id="profile-following-content" style="display: none;">
+        <div id="profile-following-list">
+          <!-- Will be populated by JS -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="profile.js"></script> <!-- Link to new profile JS -->
+</body>
+</html>
