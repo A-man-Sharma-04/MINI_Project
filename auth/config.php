@@ -46,4 +46,7 @@ define('GOOGLE_CLIENT_ID', env('GOOGLE_CLIENT_ID', ''));
 define('GOOGLE_CLIENT_SECRET', env('GOOGLE_CLIENT_SECRET', ''));
 define('GOOGLE_REDIRECT_URI', env('GOOGLE_REDIRECT_URI', 'http://localhost/MINI_Project/auth/google.php'));
 
-session_start();
+
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
