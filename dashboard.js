@@ -4,6 +4,10 @@ let markers = [];
 let currentUser = null;
 let currentTab = 'home'; // Default tab
 let currentFeedView = 'for-you'; // Default feed view
+let feedPage = 1;
+let feedHasMore = true;
+let trendingPage = 1;
+let trendingHasMore = true;
 
 // Initialize dashboard when page loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -166,14 +170,17 @@ function loadMapContent() {
 
 // Load feed content
 function loadFeedContent() {
-    // Load feed based on current view (for-you or following)
-    loadFeedItems(currentFeedView);
+    feedPage = 1;
+    feedHasMore = true;
+    loadFeedItems(currentFeedView, true);
+    bindFeedActions();
 }
 
 // Load trending content
 function loadTrendingContent() {
-    // Load trending items based on location and sort filters
-    loadTrendingItems();
+    trendingPage = 1;
+    trendingHasMore = true;
+    loadTrendingItems(true);
 }
 
 // Load recent activity for home tab
@@ -189,8 +196,9 @@ async function loadRecentActivity() {
             data.activity.forEach(item => {
                 const activityElement = document.createElement('div');
                 activityElement.className = 'activity-item';
+                const verb = item.type;
                 activityElement.innerHTML = `
-                    <p>${item.action} ${item.target_type} "${item.target_title}"</p>
+                    <p>${verb} ${item.target_type} "${item.target_title}"</p>
                     <small>${formatDate(item.created_at)}</small>
                 `;
                 list.appendChild(activityElement);
@@ -268,37 +276,62 @@ async function loadUserData() {
 
 // ... rest of your dashboard.js functions ...
 // Load feed items
-async function loadFeedItems(view) {
+async function loadFeedItems(view, reset = false) {
     try {
+        if (reset) {
+            feedPage = 1;
+        }
         const params = new URLSearchParams();
         params.append('view', view);
+        params.append('page', feedPage);
+        params.append('limit', 10);
 
         const response = await fetch(`api/get-feed.php?${params}`);
         const data = await response.json();
 
         if (data.success) {
-            renderFeedItems(data.items);
+            if (reset) {
+                renderFeedItems(data.items, false);
+            } else {
+                renderFeedItems(data.items, true);
+            }
+            feedHasMore = !!data.has_more;
+            document.getElementById('feed-load-more').style.display = feedHasMore ? 'block' : 'none';
+            feedPage += 1;
         }
     } catch (error) {
         console.error('Failed to load feed:', error);
     }
 }
 
+function loadMoreFeed() {
+    if (!feedHasMore) return;
+    loadFeedItems(currentFeedView, false);
+}
+
 // Render feed items
-function renderFeedItems(items) {
+function renderFeedItems(items, append = false) {
     const list = document.getElementById('feed-list');
-    list.innerHTML = '';
+    if (!append) {
+        list.innerHTML = '';
+    }
 
     items.forEach(item => {
         const feedElement = document.createElement('div');
         feedElement.className = 'feed-item';
+        const isSelf = currentUser && currentUser.id === item.user_id;
+        const isFollowing = Boolean(Number(item.is_following));
+        const mediaSrc = getFirstMedia(item.media_urls);
         feedElement.innerHTML = `
             <div class="feed-header">
-                <div class="user-avatar">${item.user_name.charAt(0)}</div>
-                <div>
-                    <div class="user-name">${item.user_name}</div>
-                    <div class="item-time">${formatDate(item.created_at)}</div>
+                <div class="feed-header-left">
+                    <div class="user-avatar">${item.user_name.charAt(0)}</div>
+                    <div>
+                        <div class="user-name">${item.user_name}</div>
+                        <div class="item-time">${formatDate(item.created_at)}</div>
+                    </div>
                 </div>
+                ${isSelf ? '' : `<button class="btn-follow ${isFollowing ? 'following' : ''}" data-user-id="${item.user_id}" aria-pressed="${isFollowing}" aria-label="${isFollowing ? 'Unfollow' : 'Follow'} ${item.user_name}">${isFollowing ? 'Following' : 'Follow'}</button>`}
             </div>
             <div class="feed-content">
                 <h4>${item.title}</h4>
@@ -307,43 +340,210 @@ function renderFeedItems(items) {
                     <span class="item-type" style="background: ${getTypeColor(item.type)}">${item.type}</span>
                     <span class="item-location">📍 ${item.city || 'Unknown'}</span>
                 </div>
+                ${mediaSrc ? `<img class="feed-media" src="${mediaSrc}" alt="media" />` : ''}
             </div>
             <div class="feed-actions">
-                <button>👍 Upvote</button>
-                <button>💬 Comment</button>
-                <button>📤 Share</button>
+                <button class="btn-like" data-id="${item.id}" data-count="${item.like_count ?? 0}">👍 ${item.like_count ?? 0}</button>
+                <button class="btn-comment" data-id="${item.id}" data-count="${item.comment_count ?? 0}">💬 ${item.comment_count ?? 0}</button>
+                <button class="btn-share" data-id="${item.id}" data-count="${item.share_count ?? 0}">📤 ${item.share_count ?? 0}</button>
             </div>
+            <form class="comment-form" data-id="${item.id}">
+                <input class="comment-input" type="text" placeholder="Add a comment" aria-label="Add a comment" />
+                <button type="submit" class="btn-submit-comment">Post</button>
+            </form>
         `;
         list.appendChild(feedElement);
     });
 }
 
-// Load trending items
-async function loadTrendingItems() {
+function bindFeedActions() {
+    const list = document.getElementById('feed-list');
+    if (!list || list.dataset.bound === 'true') return;
+
+    list.dataset.bound = 'true';
+    list.addEventListener('click', async (e) => {
+        const likeBtn = e.target.closest('.btn-like');
+        const commentBtn = e.target.closest('.btn-comment');
+        const followBtn = e.target.closest('.btn-follow');
+        const shareBtn = e.target.closest('.btn-share');
+        if (likeBtn) {
+            const itemId = likeBtn.dataset.id;
+            setLoading(likeBtn, true, '👍 ...');
+            const newCount = await reactToItem(itemId);
+            if (typeof newCount === 'number') {
+                likeBtn.dataset.count = newCount;
+                likeBtn.textContent = `👍 ${newCount}`;
+            }
+            setLoading(likeBtn, false, `👍 ${likeBtn.dataset.count || ''}`);
+        } else if (commentBtn) {
+            const feedItem = commentBtn.closest('.feed-item');
+            const form = feedItem?.querySelector('.comment-form');
+            if (form) {
+                form.classList.toggle('open');
+                const input = form.querySelector('.comment-input');
+                if (form.classList.contains('open')) {
+                    input?.focus();
+                }
+            }
+        } else if (followBtn) {
+            const userId = followBtn.dataset.userId;
+            const currentlyFollowing = followBtn.classList.contains('following');
+            setLoading(followBtn, true, currentlyFollowing ? 'Unfollowing...' : 'Following...');
+            await toggleFollow(userId);
+            followBtn.classList.toggle('following');
+            const nowFollowing = !currentlyFollowing;
+            followBtn.setAttribute('aria-pressed', String(nowFollowing));
+            followBtn.textContent = nowFollowing ? 'Following' : 'Follow';
+            setLoading(followBtn, false, currentlyFollowing ? 'Following' : 'Follow');
+        } else if (shareBtn) {
+            const itemId = shareBtn.dataset.id;
+            setLoading(shareBtn, true, 'Sharing...');
+            const reshare = await shareItem(itemId);
+            if (reshare && typeof reshare.share_count === 'number') {
+                shareBtn.dataset.count = reshare.share_count;
+                shareBtn.textContent = `📤 ${reshare.share_count}`;
+            }
+            setLoading(shareBtn, false, `📤 ${shareBtn.dataset.count || ''}`);
+        }
+    });
+
+    list.addEventListener('submit', async (e) => {
+        const form = e.target.closest('.comment-form');
+        if (!form) return;
+        e.preventDefault();
+        const itemId = form.dataset.id;
+        const input = form.querySelector('.comment-input');
+        const submitBtn = form.querySelector('.btn-submit-comment');
+        const text = input.value.trim();
+        if (!text) return;
+
+        setLoading(submitBtn, true, 'Posting...');
+        const newCount = await commentOnItem(itemId, text);
+        input.value = '';
+        form.classList.remove('open');
+        const commentBtn = form.parentElement?.querySelector('.btn-comment');
+        if (commentBtn && typeof newCount === 'number') {
+            commentBtn.dataset.count = newCount;
+            commentBtn.textContent = `💬 ${newCount}`;
+        }
+        setLoading(submitBtn, false, 'Post');
+    });
+}
+
+async function reactToItem(itemId) {
     try {
+        const res = await fetch('api/react-item.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_id: Number(itemId), reaction_type: 'like' })
+        });
+        const data = await res.json();
+        if (data.success) return data.like_count;
+    } catch (error) {
+        console.error('Failed to react:', error);
+    }
+    showToast('Failed to like');
+    return null;
+}
+
+async function commentOnItem(itemId, body) {
+    try {
+        const res = await fetch('api/comment-item.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_id: Number(itemId), body })
+        });
+        const data = await res.json();
+        if (data.success) return data.comment_count;
+    } catch (error) {
+        console.error('Failed to comment:', error);
+    }
+    showToast('Failed to comment');
+    return null;
+}
+
+async function shareItem(itemId) {
+    try {
+        const res = await fetch('api/share-item.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_id: Number(itemId) })
+        });
+        const data = await res.json();
+        if (data.success) return data;
+    } catch (error) {
+        console.error('Failed to share:', error);
+    }
+    showToast('Failed to share');
+    return null;
+}
+
+async function toggleFollow(targetUserId) {
+    try {
+        await fetch('api/follow-toggle.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ target_user_id: Number(targetUserId) })
+        });
+    } catch (error) {
+        console.error('Failed to toggle follow:', error);
+    }
+}
+
+function setLoading(button, isLoading, labelWhenReady) {
+    if (!button) return;
+    if (isLoading) {
+        button.dataset.originalText = button.textContent;
+        button.textContent = labelWhenReady || '...';
+        button.disabled = true;
+    } else {
+        button.textContent = labelWhenReady || button.dataset.originalText || 'Submit';
+        button.disabled = false;
+    }
+}
+
+// Load trending items
+async function loadTrendingItems(reset = true) {
+    try {
+        if (reset) {
+            trendingPage = 1;
+        }
         const params = new URLSearchParams();
         params.append('location', document.getElementById('trending-location-filter').value);
         params.append('sort', document.getElementById('trending-sort-filter').value);
+        params.append('page', trendingPage);
+        params.append('limit', 10);
 
         const response = await fetch(`api/get-trending.php?${params}`);
         const data = await response.json();
 
         if (data.success) {
-            renderTrendingItems(data.items);
+            renderTrendingItems(data.items, !reset ? true : false);
+            trendingHasMore = !!data.has_more;
+            document.getElementById('trending-load-more').style.display = trendingHasMore ? 'block' : 'none';
+            trendingPage += 1;
         }
     } catch (error) {
         console.error('Failed to load trending items:', error);
     }
 }
 
+function loadMoreTrending() {
+    if (!trendingHasMore) return;
+    loadTrendingItems(false);
+}
+
 // Render trending items
-function renderTrendingItems(items) {
+function renderTrendingItems(items, append = false) {
     const list = document.getElementById('trending-list');
-    list.innerHTML = '';
+    if (!append) {
+        list.innerHTML = '';
+    }
 
     items.forEach(item => {
         const trendingElement = document.createElement('div');
         trendingElement.className = 'trending-item';
+        const mediaSrc = getFirstMedia(item.media_urls);
         trendingElement.innerHTML = `
             <div class="trending-header">
                 <span class="trending-rank">#${item.rank}</span>
@@ -351,9 +551,11 @@ function renderTrendingItems(items) {
             </div>
             <h4>${item.title}</h4>
             <p>${item.description}</p>
+            ${mediaSrc ? `<img class="trending-media" src="${mediaSrc}" alt="media" />` : ''}
             <div class="trending-meta">
                 <span>📍 ${item.city || 'Unknown'}</span>
                 <span>👤 ${item.user_name}</span>
+                <span>👍 ${item.like_count ?? 0} • 💬 ${item.comment_count ?? 0} • 📤 ${item.share_count ?? 0}</span>
                 <span>📈 ${item.engagement_count} interactions</span>
             </div>
         `;
@@ -372,9 +574,43 @@ function getTypeColor(type) {
     return colors[type] || '#6b7280';
 }
 
+function getFirstMedia(mediaField) {
+    if (!mediaField) return null;
+    try {
+        const arr = typeof mediaField === 'string' ? JSON.parse(mediaField) : mediaField;
+        if (Array.isArray(arr) && arr.length > 0) return arr[0];
+    } catch (e) {
+        console.warn('Failed to parse media_urls', e);
+    }
+    return null;
+}
+
 // Format date for display
 function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString();
+}
+
+function showToast(message) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.position = 'fixed';
+        container.style.top = '1rem';
+        container.style.right = '1rem';
+        container.style.zIndex = '2000';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.background = '#111827';
+    toast.style.color = '#f8fafc';
+    toast.style.padding = '0.75rem 1rem';
+    toast.style.marginTop = '0.5rem';
+    toast.style.borderRadius = '8px';
+    toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
 }
 
 // Filter map items (when filters change)

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — CommunityHub</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="settings.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="settings-header">
+    <div class="settings-left">
+      <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+      <div class="logo">Community<span>Hub</span></div>
+    </div>
+    <div class="settings-right">
+      <div class="user-chip" id="settings-user-chip">U</div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <main class="settings-main">
+    <aside class="settings-nav">
+      <button class="settings-tab-btn active" data-settings-tab="account">Account</button>
+      <button class="settings-tab-btn" data-settings-tab="activity">Activity</button>
+    </aside>
+
+    <section class="settings-content">
+      <div class="settings-panel active" id="settings-account">
+        <h2>Account</h2>
+        <div class="card">
+          <div class="card-row"><span>Name</span><span id="settings-name">—</span></div>
+          <div class="card-row"><span>Email</span><span id="settings-email">—</span></div>
+          <div class="card-row"><span>City</span><span id="settings-city">—</span></div>
+          <div class="card-row"><span>Reputation</span><span id="settings-reputation">—</span></div>
+        </div>
+      </div>
+
+      <div class="settings-panel" id="settings-activity">
+        <h2>Activity</h2>
+        <div class="card stats-grid">
+          <div class="stat"><div class="stat-value" id="settings-likes-given">0</div><div class="stat-label">Likes Given</div></div>
+          <div class="stat"><div class="stat-value" id="settings-comments-given">0</div><div class="stat-label">Comments Given</div></div>
+          <div class="stat"><div class="stat-value" id="settings-shares-given">0</div><div class="stat-label">Shares Given</div></div>
+          <div class="stat"><div class="stat-value" id="settings-likes-received">0</div><div class="stat-label">Likes Received</div></div>
+          <div class="stat"><div class="stat-value" id="settings-comments-received">0</div><div class="stat-label">Comments Received</div></div>
+          <div class="stat"><div class="stat-value" id="settings-shares-received">0</div><div class="stat-label">Shares Received</div></div>
+        </div>
+        <div class="card">
+          <h3>Recent Activity</h3>
+          <div id="settings-activity-list" class="activity-list"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="settings.js"></script>
+</body>
+</html>

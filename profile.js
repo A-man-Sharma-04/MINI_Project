@@ -198,7 +198,7 @@ async function loadProfileFollowers() {
                             <div class="follower-email">${follower.email}</div>
                         </div>
                     </div>
-                    <button class="follow-btn">Follow</button>
+                    <button class="follow-btn toggle-follow ${follower.is_following ? 'following' : ''}" data-user-id="${follower.id}">${follower.is_following ? 'Following' : 'Follow'}</button>
                 `;
                 list.appendChild(followerElement);
             });
@@ -229,7 +229,7 @@ async function loadProfileFollowing() {
                             <div class="followed-email">${followed.email}</div>
                         </div>
                     </div>
-                    <button class="unfollow-btn">Unfollow</button>
+                    <button class="unfollow-btn toggle-follow following" data-user-id="${followed.id}">Unfollow</button>
                 `;
                 list.appendChild(followedElement);
             });
@@ -237,6 +237,40 @@ async function loadProfileFollowing() {
     } catch (error) {
         console.error('Failed to load following:', error);
     }
+}
+
+document.addEventListener('click', async (e) => {
+    const toggleBtn = e.target.closest('.toggle-follow');
+    if (!toggleBtn) return;
+    const userId = toggleBtn.dataset.userId;
+    const currentlyFollowing = toggleBtn.classList.contains('following');
+    toggleBtn.disabled = true;
+    toggleBtn.textContent = currentlyFollowing ? 'Unfollowing...' : 'Following...';
+    const result = await toggleFollow(userId);
+    if (result && result.success) {
+        const nowFollowing = !currentlyFollowing;
+        toggleBtn.classList.toggle('following', nowFollowing);
+        toggleBtn.textContent = nowFollowing ? 'Following' : 'Follow';
+        loadProfileContent();
+    } else {
+        toggleBtn.textContent = currentlyFollowing ? 'Unfollow' : 'Follow';
+        alert('Failed to update follow state');
+    }
+    toggleBtn.disabled = false;
+});
+
+async function toggleFollow(targetUserId) {
+    try {
+        const res = await fetch('api/follow-toggle.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ target_user_id: Number(targetUserId) })
+        });
+        return await res.json();
+    } catch (error) {
+        console.error('Failed to toggle follow:', error);
+    }
+    return null;
 }
 
 // Get color for item type

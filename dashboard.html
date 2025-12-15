@@ -46,7 +46,7 @@
           </div>
           <hr class="dropdown-divider">
           <a href="profile.html" class="dropdown-item">My Profile</a> <!-- Link to dedicated profile page -->
-          <a href="#" class="dropdown-item">Settings</a>
+          <a href="./settings.html" class="dropdown-item">Settings</a>
           <a href="#" class="dropdown-item">Rewards</a>
           <hr class="dropdown-divider">
           <a href="#" class="dropdown-item logout-btn" onclick="logout()">Logout</a>
@@ -160,6 +160,7 @@
         <div id="feed-list">
           <!-- Will be populated by JS -->
         </div>
+        <button id="feed-load-more" class="btn-load-more" style="display:none;" onclick="loadMoreFeed()">Load more</button>
       </div>
     </section>
 
@@ -191,6 +192,7 @@
         <div class="trending-list" id="trending-list">
           <!-- Will be populated by JS -->
         </div>
+        <button id="trending-load-more" class="btn-load-more" style="display:none;" onclick="loadMoreTrending()">Load more</button>
       </div>
     </section>
 

@@ -13,15 +13,16 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-// Enforce profile verification before posting
-if (!($_SESSION['id_proof_verified'] ?? false)) {
-    http_response_code(403);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Profile verification required. Please complete your profile with ID proof.'
-    ]);
-    exit;
-}
+// TEMP: bypass ID verification to allow event creation during prototype
+// TODO: Reinstate verification + workflow (e.g., KYC/document review) later.
+// if (!($_SESSION['id_proof_verified'] ?? false)) {
+//     http_response_code(403);
+//     echo json_encode([
+//         'success' => false,
+//         'message' => 'Profile verification required. Please complete your profile with ID proof.'
+//     ]);
+//     exit;
+// }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -36,7 +37,7 @@ $title = trim($_POST['title'] ?? '');
 $description = trim($_POST['description'] ?? '');
 $latitude = isset($_POST['latitude']) ? floatval($_POST['latitude']) : null;
 $longitude = isset($_POST['longitude']) ? floatval($_POST['longitude']) : null;
-$severity = $_POST['severity'] ?? 'medium';
+$severity = $_POST['severity'] ?? 'low';
 
 // Validate required fields
 if ($title === '' || $description === '' || $type === '') {
@@ -48,6 +49,12 @@ if ($title === '' || $description === '' || $type === '') {
 if ($latitude === null || $longitude === null || !is_numeric($latitude) || !is_numeric($longitude)) {
     echo json_encode(['success' => false, 'message' => 'Latitude and longitude are required']);
     exit;
+}
+
+// Normalize severity to allowed values; default low
+$allowedSeverity = ['low','medium','high','critical'];
+if (!in_array($severity, $allowedSeverity, true)) {
+    $severity = 'low';
 }
 
 // Handle image uploads
@@ -80,18 +87,34 @@ switch ($type) {
         $registration_link = $_POST['link'] ?? null;
         $contact_info['code_of_conduct'] = $_POST['code_of_conduct'] ?? null;
         $contact_info['date'] = $_POST['date'] ?? null;
+        if (empty($contact_info['date'])) {
+            echo json_encode(['success' => false, 'message' => 'Event date/time is required']);
+            exit;
+        }
         break;
     case 'issue':
         $category = $_POST['category'] ?? 'other';
         $contact_info['urgency'] = $_POST['urgency'] ?? 'medium';
+        if (empty($category)) {
+            echo json_encode(['success' => false, 'message' => 'Issue category is required']);
+            exit;
+        }
         break;
     case 'notice':
         $contact_info['valid_until'] = $_POST['valid_until'] ?? null;
         $contact_info['contact'] = $_POST['contact_info'] ?? null;
+        if (empty($contact_info['valid_until'])) {
+            echo json_encode(['success' => false, 'message' => 'Notice valid-until date is required']);
+            exit;
+        }
         break;
     case 'report':
         $contact_info['confidential'] = isset($_POST['confidential']) ? 1 : 0;
         $contact_info['priority'] = $_POST['priority'] ?? 'medium';
+        if (empty($contact_info['priority'])) {
+            echo json_encode(['success' => false, 'message' => 'Report priority is required']);
+            exit;
+        }
         break;
 }
 
@@ -126,10 +149,6 @@ try {
         ':registration_link' => $registration_link,
         ':contact_info' => $contact_info_json,
     ]);
-
-    // Update user's reputation
-    $db->prepare("UPDATE users SET reputation_score = reputation_score + 1 WHERE id = ?")
-       ->execute([$_SESSION['user_id']]);
 
     echo json_encode(['success' => true, 'message' => 'Item created successfully']);
 

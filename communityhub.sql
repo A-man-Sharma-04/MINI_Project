@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 15, 2025 at 09:41 PM
+-- Generation Time: Dec 15, 2025 at 10:45 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -63,6 +63,13 @@ CREATE TABLE `items` (
   `updated_at` datetime DEFAULT NULL,
   `location_point` point NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `items`
+--
+
+INSERT INTO `items` (`id`, `user_id`, `type`, `category`, `title`, `description`, `location_lat`, `location_lng`, `city`, `state`, `country`, `severity`, `status`, `media_urls`, `registration_link`, `contact_info`, `created_at`, `updated_at`, `location_point`) VALUES
+(1, 3, 'event', NULL, 'Birthday', 'Everyone is invited , bhai ka bday h', 28.63244500, 77.44375300, NULL, NULL, NULL, 'low', 'reported', '[]', '', '{\"code_of_conduct\":\"\",\"date\":\"\"}', '2025-12-15 21:33:43', NULL, 0x0000000001010000001fa0fb72665c5340cb845feae7a13c40);
 
 --
 -- Triggers `items`
@@ -199,7 +206,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `email`, `name`, `password_hash`, `city`, `pincode`, `phone`, `age_verified`, `id_proof_verified`, `id_proof_path`, `reputation_score`, `created_at`, `last_login_at`, `dob`, `gender`) VALUES
-(3, 'desksharma113114@gmail.com', 'Aman Sharma', NULL, 'Gzb', NULL, NULL, 0, 0, NULL, 0, NULL, NULL, NULL, NULL);
+(3, 'desksharma113114@gmail.com', 'Aman Sharma', NULL, 'Gzb', NULL, '6280426286', 0, 0, NULL, 1, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -249,7 +256,7 @@ CREATE TABLE `user_profiles` (
 --
 
 INSERT INTO `user_profiles` (`user_id`, `bio`, `profile_image`, `total_issues_raised`, `total_issues_resolved`, `followers_count`, `following_count`, `banner_image`) VALUES
-(3, 'Social activist', NULL, 0, 0, 0, 0, NULL);
+(3, 'Hello People , I am here to contribute to the community and be a responsible citizen.', 'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=400&h=400&fit=crop', 0, 0, 0, 0, 'https://images.unsplash.com/photo-1503264116251-35a269479413?w=1200&h=400&fit=crop');
 
 -- --------------------------------------------------------
 
@@ -406,7 +413,7 @@ ALTER TABLE `comments`
 -- AUTO_INCREMENT for table `items`
 --
 ALTER TABLE `items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `media`
