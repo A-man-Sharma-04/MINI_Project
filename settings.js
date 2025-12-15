@@ -1,11 +1,16 @@
 // settings.js
 let currentUser = null;
+let activityPage = 1;
+let activityHasMore = true;
+let activityLoading = false;
+const ACTIVITY_LIMIT = 10;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await checkAuth();
     bindTabs();
     loadAccount();
-    loadActivity();
+    loadActivity(true);
+    window.addEventListener('scroll', handleActivityScroll);
 });
 
 async function checkAuth() {
@@ -63,23 +68,80 @@ function renderActivityStats() {
     document.getElementById('settings-shares-received').textContent = stats.shares_received ?? 0;
 }
 
-async function loadActivity() {
+async function loadActivity(reset = false) {
+    if (activityLoading) return;
+    if (reset) {
+        activityPage = 1;
+        activityHasMore = true;
+        document.getElementById('settings-activity-list').innerHTML = '';
+    }
+    if (!activityHasMore) return;
+
+    activityLoading = true;
+    toggleActivityLoading(true);
+
     try {
-        const res = await fetch('api/recent-activity.php');
+        const res = await fetch(`api/recent-activity.php?page=${activityPage}&limit=${ACTIVITY_LIMIT}`);
         const data = await res.json();
         if (data.success) {
-            const list = document.getElementById('settings-activity-list');
-            list.innerHTML = '';
-            data.activity.forEach(act => {
-                const el = document.createElement('div');
-                el.className = 'activity-item';
-                el.innerHTML = `<p>${act.type} ${act.target_type} "${act.target_title}"</p><small>${formatDate(act.created_at)}</small>`;
-                list.appendChild(el);
-            });
+            renderActivity(data.activity, activityPage > 1);
+            activityHasMore = data.has_more;
+            activityPage += 1;
         }
     } catch (e) {
         console.error('Failed to load activity', e);
+    } finally {
+        activityLoading = false;
+        toggleActivityLoading(false);
     }
+}
+
+function renderActivity(items, append = false) {
+    const list = document.getElementById('settings-activity-list');
+    if (!append) list.innerHTML = '';
+
+    if ((!items || items.length === 0) && !append) {
+        list.innerHTML = '<p class="activity-empty">No recent activity yet.</p>';
+        return;
+    }
+
+    items.forEach(act => {
+        const el = document.createElement('div');
+        el.className = 'activity-item';
+        const label = formatActivityLabel(act);
+        const mediaHtml = act.media ? `<div class="activity-media"><img src="${act.media}" alt="media preview"></div>` : '';
+        el.innerHTML = `<p>${label}</p><small>${formatDate(act.created_at)}</small>${mediaHtml}`;
+        list.appendChild(el);
+    });
+}
+
+function formatActivityLabel(act) {
+    const title = act.target_title || 'an item';
+    switch (act.type) {
+        case 'posted':
+            return `You posted "${title}"`;
+        case 'commented':
+            return `You commented on "${title}"`;
+        case 'liked':
+            return `You liked "${title}"`;
+        case 'shared':
+            return `You shared "${title}"`;
+        default:
+            return `${act.type} ${act.target_type} "${title}"`;
+    }
+}
+
+function handleActivityScroll() {
+    const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 200;
+    if (nearBottom && activityHasMore && !activityLoading) {
+        loadActivity();
+    }
+}
+
+function toggleActivityLoading(show) {
+    const indicator = document.getElementById('settings-activity-loading');
+    if (!indicator) return;
+    indicator.style.display = show ? 'block' : 'none';
 }
 
 function formatDate(dateString) {

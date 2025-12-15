@@ -95,6 +95,9 @@ async function loadProfileContent() {
 
             setBannerImage(data.profile.banner_image);
             setAvatar(data.profile.profile_image, data.profile.name || 'User');
+
+            // Immediately load posts on first view
+            loadProfilePosts();
         }
     } catch (error) {
         console.error('Failed to load profile summary:', error);
