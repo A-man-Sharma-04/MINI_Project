@@ -1,10 +1,10 @@
 // profile.js
 let currentUser = null;
 
-document.addEventListener('DOMContentLoaded', function() {
-    checkAuth();
-    loadUserData();
+document.addEventListener('DOMContentLoaded', async function() {
+    await checkAuth(); // ensure currentUser is set before dependent calls
     setupEventListeners();
+    primePlaceholders();
     loadProfileContent(); // Load the default profile content (posts)
 });
 
@@ -74,18 +74,72 @@ function showProfileTab(profileTab) {
 // Load user profile summary (stats)
 async function loadProfileContent() {
     try {
-        const response = await fetch(`api/user-profile.php?user_id=${currentUser.id}`);
+        const response = await fetch('api/user-profile.php');
         const data = await response.json();
 
         if (data.success) {
             document.getElementById('profile-posts-count').textContent = data.stats.total_items;
             document.getElementById('profile-followers-count').textContent = data.stats.followers_count;
             document.getElementById('profile-following-count').textContent = data.stats.following_count;
-            document.getElementById('profile-bio').textContent = data.profile.bio || 'Community member passionate about local improvements.';
+            document.getElementById('profile-reputation').textContent = data.stats.reputation;
+
+            // Bio
+            document.getElementById('profile-bio').textContent = data.profile.bio || '';
+
+            // Name (fresh from DB in case it changed)
+            if (data.profile.name) {
+                document.getElementById('profile-name-display').textContent = data.profile.name;
+                document.getElementById('profile-user-name').textContent = data.profile.name;
+                document.getElementById('profile-user-initial').textContent = data.profile.name.charAt(0).toUpperCase();
+            }
+
+            setBannerImage(data.profile.banner_image);
+            setAvatar(data.profile.profile_image, data.profile.name || 'User');
         }
     } catch (error) {
         console.error('Failed to load profile summary:', error);
     }
+}
+
+// Pre-set placeholders to reduce flash/jump
+function primePlaceholders() {
+    document.getElementById('profile-bio').textContent = ''; // keep empty to avoid default flash
+    document.getElementById('profile-posts-count').textContent = '–';
+    document.getElementById('profile-followers-count').textContent = '–';
+    document.getElementById('profile-following-count').textContent = '–';
+    document.getElementById('profile-reputation').textContent = '–';
+}
+
+function setBannerImage(url) {
+    const bannerEl = document.getElementById('profile-banner-image');
+    if (!url) {
+        bannerEl.src = 'https://via.placeholder.com/800x200/3b82f6/white?text=Banner';
+        return;
+    }
+    const img = new Image();
+    img.onload = () => { bannerEl.src = url; };
+    img.onerror = () => { bannerEl.src = 'https://via.placeholder.com/800x200/3b82f6/white?text=Banner'; };
+    img.src = url;
+}
+
+function setAvatar(imageUrl, name) {
+    const avatarEl = document.getElementById('profile-avatar');
+    const initial = (name || 'U').charAt(0).toUpperCase();
+    avatarEl.textContent = initial;
+    avatarEl.style.backgroundImage = '';
+
+    if (!imageUrl) return;
+
+    const img = new Image();
+    img.onload = () => {
+        avatarEl.style.backgroundImage = `url(${imageUrl})`;
+        avatarEl.textContent = ''; // hide initial when image loads
+    };
+    img.onerror = () => {
+        avatarEl.style.backgroundImage = '';
+        avatarEl.textContent = initial; // fallback to initial
+    };
+    img.src = imageUrl;
 }
 
 // Load profile posts

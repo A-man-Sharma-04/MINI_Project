@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Profile — CommunityHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="edit-profile.css" />
+</head>
+<body>
+  <header class="ep-header">
+    <div class="ep-left">
+      <a href="profile.html" class="ep-back">← Back to Profile</a>
+      <div class="logo">Community<span>Hub</span></div>
+    </div>
+  </header>
+
+  <main class="ep-main">
+    <section class="ep-card">
+      <h1>Edit Profile</h1>
+      <p class="ep-subtitle">Update your personal details and profile visuals.</p>
+
+      <form id="edit-profile-form">
+        <div class="ep-grid">
+          <div class="ep-field">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" placeholder="Your name" required />
+          </div>
+          <div class="ep-field">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="you@example.com" required />
+          </div>
+          <div class="ep-field">
+            <label for="contact">Contact / Phone</label>
+            <input type="text" id="contact" name="contact" placeholder="Optional contact" />
+          </div>
+          <div class="ep-field ep-full">
+            <label for="bio">Bio</label>
+            <textarea id="bio" name="bio" rows="3" placeholder="Tell people about you"></textarea>
+          </div>
+          <div class="ep-field">
+            <label for="profile_image">Profile Image URL (e.g., Drive link)</label>
+            <input type="url" id="profile_image" name="profile_image" placeholder="https://..." />
+          </div>
+          <div class="ep-field">
+            <label for="banner_image">Banner Image URL</label>
+            <input type="url" id="banner_image" name="banner_image" placeholder="https://..." />
+          </div>
+        </div>
+
+        <div class="ep-actions">
+          <button type="submit" class="btn-primary">Save Changes</button>
+          <a href="profile.html" class="btn-ghost">Cancel</a>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="edit-profile.js"></script>
+</body>
+</html>

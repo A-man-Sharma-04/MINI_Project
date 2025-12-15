@@ -26,15 +26,18 @@
 
   <main class="profile-main">
     <div class="profile-banner">
-      <img src="https://via.placeholder.com/800x200/3b82f6/white?text=Banner" alt="Profile Banner" class="banner-image">
+      <img id="profile-banner-image" src="https://via.placeholder.com/800x200/3b82f6/white?text=Banner" alt="Profile Banner" class="banner-image">
       <div class="profile-avatar-container">
-        <div class="profile-avatar-large">U</div>
+        <div class="profile-avatar-large" id="profile-avatar">U</div>
       </div>
     </div>
 
     <div class="profile-info">
       <h1 id="profile-name-display">User Name</h1>
-      <p id="profile-bio">Community member passionate about local improvements.</p>
+      <p id="profile-bio"></p>
+      <div class="profile-actions">
+        <a class="btn-edit-profile" href="edit-profile.html">Edit Profile</a>
+      </div>
       <div class="profile-stats">
         <div class="stat">
           <span class="stat-value" id="profile-posts-count">0</span>
@@ -47,6 +50,10 @@
         <div class="stat">
           <span class="stat-value" id="profile-following-count">0</span>
           <span class="stat-label">Following</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="profile-reputation">0</span>
+          <span class="stat-label">Reputation</span>
         </div>
       </div>
     </div>
