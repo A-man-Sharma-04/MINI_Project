@@ -31,6 +31,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $db = getDB();
 
+if ($city === '' || $state === '' || $country === '') {
+    try {
+        $locStmt = $db->prepare("SELECT city, state, country FROM users WHERE id = ? LIMIT 1");
+        $locStmt->execute([$_SESSION['user_id']]);
+        $locRow = $locStmt->fetch(PDO::FETCH_ASSOC);
+        if ($city === '') $city = $locRow['city'] ?? '';
+        if ($state === '') $state = $locRow['state'] ?? '';
+        if ($country === '') $country = $locRow['country'] ?? '';
+    } catch (PDOException $e) {
+        error_log('create-item location lookup error: ' . $e->getMessage());
+    }
+}
+
 // Get form data
 $type = $_POST['type'] ?? '';
 $title = trim($_POST['title'] ?? '');
@@ -38,6 +51,11 @@ $description = trim($_POST['description'] ?? '');
 $latitude = isset($_POST['latitude']) ? floatval($_POST['latitude']) : null;
 $longitude = isset($_POST['longitude']) ? floatval($_POST['longitude']) : null;
 $severity = $_POST['severity'] ?? 'low';
+
+// Location metadata (prefer request, fallback to user profile)
+$city = trim($_POST['city'] ?? '');
+$state = trim($_POST['state'] ?? '');
+$country = trim($_POST['country'] ?? '');
 
 // Validate required fields
 if ($title === '' || $description === '' || $type === '') {
@@ -130,7 +148,7 @@ try {
     ) VALUES (
         :user_id, :type, :category, :title, :description,
         :lat, :lng, POINT(:lng_point, :lat_point),
-        NULL, NULL, NULL, :severity, 'reported',
+        :city, :state, :country, :severity, 'reported',
         :media_urls, :registration_link, :contact_info, NOW()
     )");
 
@@ -144,6 +162,9 @@ try {
         ':lng' => $longitude,
         ':lng_point' => $longitude,
         ':lat_point' => $latitude,
+        ':city' => $city ?: null,
+        ':state' => $state ?: null,
+        ':country' => $country ?: null,
         ':severity' => $severity,
         ':media_urls' => $media_json,
         ':registration_link' => $registration_link,

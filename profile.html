@@ -85,6 +85,45 @@
     </div>
   </main>
 
+  <!-- Edit Post Modal -->
+  <div id="post-edit-modal" class="modal-backdrop" style="display:none;">
+    <div class="modal">
+      <h3>Edit Post</h3>
+      <form id="post-edit-form">
+        <input type="hidden" id="post-edit-id" />
+        <label>Title</label>
+        <input type="text" id="post-edit-title" required />
+        <label>Description</label>
+        <textarea id="post-edit-description" rows="3" required></textarea>
+        <label>Type</label>
+        <select id="post-edit-type" required>
+          <option value="event">event</option>
+          <option value="issue">issue</option>
+          <option value="notice">notice</option>
+          <option value="report">report</option>
+        </select>
+        <div class="grid-3">
+          <div>
+            <label>City</label>
+            <input type="text" id="post-edit-city" />
+          </div>
+          <div>
+            <label>State</label>
+            <input type="text" id="post-edit-state" />
+          </div>
+          <div>
+            <label>Country</label>
+            <input type="text" id="post-edit-country" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="post-edit-cancel" class="btn-secondary">Cancel</button>
+          <button type="submit" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="profile.js"></script> <!-- Link to new profile JS -->
 </body>
 </html>

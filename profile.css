@@ -225,6 +225,70 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
+.post-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+}
+.post-btn {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #f8fafc;
+  cursor: pointer;
+  font-weight: 600;
+}
+.post-btn:hover { background: #e2e8f0; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  width: min(500px, 90vw);
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.modal h3 { margin: 0 0 0.75rem 0; }
+.modal label { display: block; font-weight: 600; margin: 0.6rem 0 0.25rem; }
+.modal input, .modal textarea, .modal select {
+  width: 100%;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.grid-3 { display: grid; gap: 0.6rem; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+
+.modal-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.btn-secondary, .btn-primary {
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 700;
+}
+.btn-secondary { background: #fff; border-color: #e2e8f0; color: #334155; }
+.btn-secondary:hover { background: #f1f5f9; }
+.btn-primary { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+.btn-primary:hover { background: #2563eb; border-color: #2563eb; }
+
 .post-header, .follower-info, .followed-info {
   display: flex;
   align-items: center;

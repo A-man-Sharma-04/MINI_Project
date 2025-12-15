@@ -18,8 +18,13 @@ $userId = (int)($_GET['user_id'] ?? $_SESSION['user_id']);
 
 try {
     $db = getDB();
-    $stmt = $db->prepare("SELECT id, title, description, type, city, created_at, media_urls FROM items WHERE user_id = ? ORDER BY created_at DESC LIMIT 100");
-    $stmt->execute([$userId]);
+        $stmt = $db->prepare("SELECT id, title, description, type, city, state, country, created_at, updated_at, media_urls 
+                FROM items 
+                WHERE user_id = ? 
+                    AND id NOT IN (SELECT item_id FROM post_status_history WHERE new_status = 'deleted')
+                ORDER BY created_at DESC
+                LIMIT 100");
+        $stmt->execute([$userId]);
     $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([

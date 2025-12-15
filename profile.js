@@ -1,11 +1,22 @@
 // profile.js
 let currentUser = null;
+let profilePostsCache = new Map();
+let editModal = null;
+let editForm = null;
 
 document.addEventListener('DOMContentLoaded', async function() {
     await checkAuth(); // ensure currentUser is set before dependent calls
     setupEventListeners();
     primePlaceholders();
     loadProfileContent(); // Load the default profile content (posts)
+
+    // cache modal elements
+    editModal = document.getElementById('post-edit-modal');
+    editForm = document.getElementById('post-edit-form');
+    if (editForm) {
+        editForm.addEventListener('submit', handleEditSubmit);
+        document.getElementById('post-edit-cancel').addEventListener('click', closeEditModal);
+    }
 });
 
 async function checkAuth() {
@@ -154,8 +165,10 @@ async function loadProfilePosts() {
         if (data.success) {
             const list = document.getElementById('profile-posts-list');
             list.innerHTML = '';
+            profilePostsCache.clear();
 
             data.posts.forEach(post => {
+                profilePostsCache.set(post.id, post);
                 const postElement = document.createElement('div');
                 postElement.className = 'profile-post';
                 postElement.innerHTML = `
@@ -163,13 +176,17 @@ async function loadProfilePosts() {
                         <div class="post-avatar">${currentUser.name.charAt(0)}</div>
                         <div>
                             <div class="post-title">${post.title}</div>
-                            <div class="post-time">${formatDate(post.created_at)}</div>
+                            <div class="post-time">${formatDate(post.created_at)}${post.updated_at ? ` • edited ${formatDateTime(post.updated_at)}` : ''}</div>
                         </div>
                     </div>
                     <p>${post.description}</p>
                     <div class="post-meta">
                         <span class="item-type" style="background: ${getTypeColor(post.type)}">${post.type}</span>
                         <span>📍 ${post.city || 'Unknown'}</span>
+                    </div>
+                    <div class="post-actions">
+                        <button class="post-btn post-edit-btn" data-post-id="${post.id}">Edit</button>
+                        <button class="post-btn post-delete-btn" data-post-id="${post.id}">Delete</button>
                     </div>
                 `;
                 list.appendChild(postElement);
@@ -209,6 +226,10 @@ async function loadProfileFollowers() {
     } catch (error) {
         console.error('Failed to load followers:', error);
     }
+
+        function formatDateTime(dateString) {
+            return new Date(dateString).toLocaleString();
+        }
 }
 
 // Load profile following
@@ -274,6 +295,113 @@ async function toggleFollow(targetUserId) {
         console.error('Failed to toggle follow:', error);
     }
     return null;
+}
+
+// Post edit/delete handlers (self-only page)
+document.addEventListener('click', async (e) => {
+    const editBtn = e.target.closest('.post-edit-btn');
+    const deleteBtn = e.target.closest('.post-delete-btn');
+
+    if (editBtn) {
+        const postId = Number(editBtn.dataset.postId);
+        await handleEditPost(postId);
+        return;
+    }
+
+    if (deleteBtn) {
+        const postId = Number(deleteBtn.dataset.postId);
+        await handleDeletePost(postId);
+    }
+});
+
+async function handleEditPost(postId) {
+    const post = profilePostsCache.get(postId);
+    if (!post) return;
+    const allowed = ['event','issue','notice','report'];
+    const typeSelect = document.getElementById('post-edit-type');
+
+    document.getElementById('post-edit-id').value = postId;
+    document.getElementById('post-edit-title').value = post.title || '';
+    document.getElementById('post-edit-description').value = post.description || '';
+    document.getElementById('post-edit-city').value = post.city || '';
+    document.getElementById('post-edit-state').value = post.state || '';
+    document.getElementById('post-edit-country').value = post.country || '';
+    if (allowed.includes(post.type)) {
+        typeSelect.value = post.type;
+    }
+    openEditModal();
+}
+
+function openEditModal() {
+    if (editModal) editModal.style.display = 'flex';
+}
+
+function closeEditModal() {
+    if (editModal) editModal.style.display = 'none';
+}
+
+async function handleEditSubmit(e) {
+    e.preventDefault();
+    const postId = Number(document.getElementById('post-edit-id').value);
+    const newTitle = document.getElementById('post-edit-title').value.trim();
+    const newDescription = document.getElementById('post-edit-description').value.trim();
+    const newType = document.getElementById('post-edit-type').value;
+    const newCity = document.getElementById('post-edit-city').value.trim();
+    const newState = document.getElementById('post-edit-state').value.trim();
+    const newCountry = document.getElementById('post-edit-country').value.trim();
+
+    if (!newTitle || !newDescription) {
+        alert('Title and description are required');
+        return;
+    }
+
+    try {
+        const res = await fetch('api/update-item.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                item_id: postId,
+                title: newTitle,
+                description: newDescription,
+                type: newType,
+                city: newCity,
+                state: newState,
+                country: newCountry
+            })
+        });
+        const data = await res.json();
+        if (!data.success) {
+            alert(data.message || 'Failed to update post');
+            return;
+        }
+        closeEditModal();
+        await loadProfilePosts();
+    } catch (err) {
+        console.error('Failed to edit post', err);
+        alert('Failed to update post');
+    }
+}
+
+async function handleDeletePost(postId) {
+    if (!confirm('Delete this post? This cannot be undone.')) return;
+    try {
+        const res = await fetch('api/delete-item.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_id: postId })
+        });
+        const data = await res.json();
+        if (!data.success) {
+            alert(data.message || 'Failed to delete post');
+            return;
+        }
+        profilePostsCache.delete(postId);
+        await loadProfilePosts();
+        await loadProfileContent();
+    } catch (err) {
+        console.error('Failed to delete post', err);
+        alert('Failed to delete post');
+    }
 }
 
 // Get color for item type

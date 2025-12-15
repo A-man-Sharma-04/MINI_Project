@@ -46,7 +46,9 @@ try {
         $statsStmt = $db->prepare("SELECT 
                 COUNT(*) AS total_items,
                 SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) AS resolved_items
-            FROM items WHERE user_id = ?");
+            FROM items 
+            WHERE user_id = ? 
+              AND id NOT IN (SELECT item_id FROM post_status_history WHERE new_status = 'deleted')");
         $statsStmt->execute([$user_id]);
         $statsRow = $statsStmt->fetch();
 
