@@ -50,7 +50,9 @@ try {
         LEFT JOIN (
             SELECT item_id, COUNT(*) AS shares FROM user_engagement WHERE action='share' GROUP BY item_id
         ) s ON s.item_id = i.id
-        WHERE 1=1";
+                WHERE 1=1
+                    AND (i.status IS NULL OR i.status != 'closed')
+                    AND i.id NOT IN (SELECT item_id FROM post_status_history WHERE new_status = 'deleted')";
 
     $params = [];
     // Location filter (simplified: use city if available)
