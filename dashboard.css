@@ -295,6 +295,35 @@ body {
   height: 100%;
 }
 
+.map-circle-marker {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+}
+
+.map-pie-icon {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+}
+
+.map-pie-marker {
+  position: relative;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.map-pie-center {
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
 .map-controls {
   position: absolute;
   top: 1rem;

@@ -15,7 +15,6 @@ let trendingHasMore = true;
 document.addEventListener('DOMContentLoaded', function() {
     checkAuth();
     initMap();
-    loadUserData();
     setupEventListeners();
     showTab('home'); // Show home tab by default
 });
@@ -33,6 +32,7 @@ async function checkAuth() {
 
         currentUser = data.user;
         updateUI();
+        loadUserData();
 
     } catch (error) {
         console.error('Auth check failed:', error);
@@ -45,10 +45,14 @@ function updateUI() {
     if (!currentUser) return;
 
     // Update header elements
-    document.getElementById('user-initial').textContent = currentUser.name.charAt(0).toUpperCase();
-    document.getElementById('user-initial-large').textContent = currentUser.name.charAt(0).toUpperCase();
-    document.getElementById('user-name-display').textContent = currentUser.name;
-    document.getElementById('home-user-name').textContent = currentUser.name;
+    const name = currentUser.name || '';
+    const email = currentUser.email || '';
+    document.getElementById('user-initial').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('user-initial-large').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('user-name-display').textContent = name;
+    document.getElementById('home-user-name').textContent = name;
+    const emailNode = document.getElementById('user-email-display');
+    if (emailNode) emailNode.textContent = email;
 }
 
 // Initialize map
@@ -164,7 +168,7 @@ function toggleProfileDropdown() {
 
 // Load home content
 function loadHomeContent() {
-    // Load recent activity
+    if (!currentUser) return; // wait for auth before loading
     loadRecentActivity();
 }
 
@@ -184,6 +188,8 @@ function loadFeedContent() {
 
 // Load trending content
 function loadTrendingContent() {
+    const locationSelect = document.getElementById('trending-location-filter');
+    if (locationSelect) locationSelect.value = 'global';
     trendingPage = 1;
     trendingHasMore = true;
     loadTrendingItems(true);
@@ -191,6 +197,7 @@ function loadTrendingContent() {
 
 // Load recent activity for home tab
 async function loadRecentActivity() {
+    if (!currentUser || !currentUser.id) return;
     try {
         const response = await fetch(`api/recent-activity.php?user_id=${currentUser.id}`);
         const data = await response.json();
@@ -223,11 +230,35 @@ async function loadMapItems() {
         params.append('status', document.getElementById('map-status-filter').value);
         params.append('severity', document.getElementById('map-severity-filter').value);
 
-        const response = await fetch(`api/get-items.php?${params}`);
-        const data = await response.json();
+        const response = await fetch(`api/get-items.php?${params}`, { credentials: 'same-origin' });
+        if (!response.ok) {
+            const statusText = response.statusText || 'Request failed';
+            console.error('Map items fetch failed:', response.status, statusText);
+            showToast('Map request failed. Please re-login.');
+            return;
+        }
+        const text = await response.text();
+        if (!text || text.trim() === '') {
+            console.error('Map items parse error. Empty response');
+            showToast('Map data is empty. Please refresh.');
+            return;
+        }
 
-        if (data.success) {
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.error('Map items parse error. Raw response:', text);
+            showToast('Map data is invalid. Please refresh.');
+            throw e;
+        }
+
+        if (data && data.success) {
             renderMapItems(data.items);
+        } else {
+            const msg = data?.message || 'Failed to load map items';
+            console.error('Map items error:', msg);
+            showToast(msg);
         }
     } catch (error) {
         console.error('Failed to load map items:', error);
@@ -242,40 +273,113 @@ function renderMapItems(items) {
     markers.forEach(marker => map.removeLayer(marker));
     markers = [];
 
+    const grouped = groupItemsByCoordinate(mapItems);
     const validMarkers = [];
-    mapItems.forEach(item => {
-        const lat = Number(item.location_lat);
-        const lng = Number(item.location_lng);
+
+    grouped.forEach(group => {
+        const { lat, lng, items: groupItems, counts } = group;
         if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
-        const color = getTypeColor(item.type);
-        const severityRadius = getSeverityRadius((item.severity || 'medium').toLowerCase());
-        const marker = L.circleMarker([lat, lng], {
-            radius: severityRadius,
-            color,
-            fillColor: color,
-            fillOpacity: 0.85,
-            weight: 1.5,
-            opacity: 0.9
-        });
+        if (groupItems.length === 1) {
+            const item = groupItems[0];
+            const color = getTypeColor(item.type);
+            const severityRadius = getSeverityRadius((item.severity || 'medium').toLowerCase());
+            const marker = L.circleMarker([lat, lng], {
+                radius: severityRadius,
+                color: '#ffffff',
+                fillColor: color,
+                fillOpacity: 0.9,
+                weight: 3,
+                opacity: 1,
+                className: 'map-circle-marker'
+            });
 
-        marker.itemData = { ...item, location_lat: lat, location_lng: lng };
-        marker.bindTooltip(item.title || 'Untitled', { direction: 'top', offset: [0, -4] });
-        marker.on('mouseover', () => handleMarkerFocus(marker.itemData));
-        marker.on('click', () => handleMarkerFocus(marker.itemData));
-        marker.addTo(map);
-
-        markers.push(marker);
-        validMarkers.push(marker);
+            marker.itemData = { ...item, location_lat: lat, location_lng: lng };
+            marker.bindTooltip(item.title || 'Untitled', { direction: 'top', offset: [0, -4] });
+            marker.on('mouseover', () => handleMarkerFocus(marker.itemData));
+            marker.on('click', () => handleMarkerFocus(marker.itemData));
+            marker.addTo(map);
+            markers.push(marker);
+            validMarkers.push(marker);
+        } else {
+            const marker = L.marker([lat, lng], { icon: createPieIcon(counts, groupItems.length) });
+            marker.on('click', () => showClusterList(group));
+            marker.addTo(map);
+            markers.push(marker);
+            validMarkers.push(marker);
+        }
     });
 
     if (validMarkers.length) {
-        const group = L.featureGroup(validMarkers);
-        map.fitBounds(group.getBounds().pad(0.2));
-        updateMapListPanel();
-    } else {
-        updateMapListPanel();
+        const groupLayer = L.featureGroup(validMarkers);
+        map.fitBounds(groupLayer.getBounds().pad(0.2));
     }
+
+    updateMapListPanel();
+}
+
+function groupItemsByCoordinate(items, precision = 5) {
+    const groups = new Map();
+    items.forEach(item => {
+        const lat = Number(item.location_lat);
+        const lng = Number(item.location_lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+        const key = `${lat.toFixed(precision)},${lng.toFixed(precision)}`;
+        if (!groups.has(key)) {
+            groups.set(key, { lat, lng, items: [], counts: {} });
+        }
+        const group = groups.get(key);
+        group.items.push(item);
+        group.counts[item.type] = (group.counts[item.type] || 0) + 1;
+    });
+    return Array.from(groups.values());
+}
+
+function createPieIcon(counts, total) {
+    const size = 28;
+    const types = Object.keys(counts);
+    const sum = types.reduce((acc, t) => acc + counts[t], 0) || 1;
+    let start = 0;
+    const segments = types.map(type => {
+        const portion = counts[type] / sum;
+        const end = start + portion * 360;
+        const segment = `${getTypeColor(type)} ${start}deg ${end}deg`;
+        start = end;
+        return segment;
+    });
+    const gradient = segments.join(', ');
+    const html = `
+        <div class="map-pie-marker" style="width:${size}px;height:${size}px;background:conic-gradient(${gradient})">
+            <div class="map-pie-center">${total}</div>
+        </div>`;
+    return L.divIcon({
+        className: 'map-pie-icon',
+        html,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2]
+    });
+}
+
+function showClusterList(group) {
+    const panel = document.getElementById('map-list-panel');
+    if (!panel) return;
+    const sorted = [...group.items].sort((a, b) => (a.type || '').localeCompare(b.type || ''));
+    panel.innerHTML = `
+        <div class="map-list-cluster-head">${group.items.length} posts at this spot</div>
+        ${sorted.map(item => {
+            const severityClass = `severity-${(item.severity || 'medium').toLowerCase()}`;
+            return `
+                <div class="map-list-item">
+                    <div>
+                        <div><strong>${item.title || 'Untitled'}</strong></div>
+                        <div class="map-list-meta">
+                            <span class="badge ${item.type}">${item.type || 'item'}</span>
+                            <span class="badge status">${(item.status || 'unknown').replace('_', ' ')}</span>
+                            <span class="badge ${severityClass}">${item.severity || 'n/a'}</span>
+                        </div>
+                    </div>
+                </div>`;
+        }).join('')}`;
 }
 
 function handleMarkerFocus(anchorItem) {
@@ -314,10 +418,10 @@ function haversineDistanceKm(lat1, lng1, lat2, lng2) {
 
 function getSeverityRadius(severity) {
     const sizeMap = {
-        low: 7,
-        medium: 8.5,
-        high: 10,
-        critical: 12
+        low: 8,
+        medium: 10,
+        high: 12,
+        critical: 14
     };
     return sizeMap[severity] || 8;
 }
