@@ -1,6 +1,8 @@
 // dashboard.js
 let map;
 let markers = [];
+let mapItems = [];
+const MAP_NEARBY_RADIUS_KM = 0.5;
 let currentUser = null;
 let currentTab = 'home'; // Default tab
 let currentFeedView = 'for-you'; // Default feed view
@@ -114,6 +116,10 @@ function showTab(tab) {
         content.classList.remove('active');
     });
     document.getElementById(`${tab}-tab`).classList.add('active');
+
+    if (tab === 'map' && map) {
+        setTimeout(() => map.invalidateSize(), 120);
+    }
 
     // Load tab-specific content
     switch(tab) {
@@ -230,21 +236,129 @@ async function loadMapItems() {
 
 // Render items on map
 function renderMapItems(items) {
+    mapItems = Array.isArray(items) ? items : [];
+
     // Clear existing markers
     markers.forEach(marker => map.removeLayer(marker));
     markers = [];
 
-    items.forEach(item => {
-        if (item.location_lat && item.location_lng) {
-            const marker = L.marker([item.location_lat, item.location_lng]).addTo(map);
-            marker.bindPopup(`
-                <b>${item.title}</b><br>
-                ${item.description}<br>
-                <small>${item.type} - ${item.status}</small>
-            `);
-            markers.push(marker);
-        }
+    const validMarkers = [];
+    mapItems.forEach(item => {
+        const lat = Number(item.location_lat);
+        const lng = Number(item.location_lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+        const color = getTypeColor(item.type);
+        const severityRadius = getSeverityRadius((item.severity || 'medium').toLowerCase());
+        const marker = L.circleMarker([lat, lng], {
+            radius: severityRadius,
+            color,
+            fillColor: color,
+            fillOpacity: 0.85,
+            weight: 1.5,
+            opacity: 0.9
+        });
+
+        marker.itemData = { ...item, location_lat: lat, location_lng: lng };
+        marker.bindTooltip(item.title || 'Untitled', { direction: 'top', offset: [0, -4] });
+        marker.on('mouseover', () => handleMarkerFocus(marker.itemData));
+        marker.on('click', () => handleMarkerFocus(marker.itemData));
+        marker.addTo(map);
+
+        markers.push(marker);
+        validMarkers.push(marker);
     });
+
+    if (validMarkers.length) {
+        const group = L.featureGroup(validMarkers);
+        map.fitBounds(group.getBounds().pad(0.2));
+        updateMapListPanel();
+    } else {
+        updateMapListPanel();
+    }
+}
+
+function handleMarkerFocus(anchorItem) {
+    if (!anchorItem) return;
+    const nearby = getNearbyItems(anchorItem, MAP_NEARBY_RADIUS_KM);
+    updateMapListPanel(anchorItem, nearby);
+}
+
+function getNearbyItems(anchorItem, radiusKm) {
+    const lat1 = Number(anchorItem.location_lat);
+    const lng1 = Number(anchorItem.location_lng);
+    if (!Number.isFinite(lat1) || !Number.isFinite(lng1)) return [];
+
+    return mapItems
+        .map(item => {
+            const lat2 = Number(item.location_lat);
+            const lng2 = Number(item.location_lng);
+            if (!Number.isFinite(lat2) || !Number.isFinite(lng2)) return null;
+            const distanceKm = haversineDistanceKm(lat1, lng1, lat2, lng2);
+            return { ...item, location_lat: lat2, location_lng: lng2, distanceKm };
+        })
+        .filter(Boolean)
+        .filter(item => item.distanceKm <= radiusKm)
+        .sort((a, b) => a.distanceKm - b.distanceKm);
+}
+
+function haversineDistanceKm(lat1, lng1, lat2, lng2) {
+    const toRad = deg => (deg * Math.PI) / 180;
+    const R = 6371; // Earth radius in km
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+function getSeverityRadius(severity) {
+    const sizeMap = {
+        low: 7,
+        medium: 8.5,
+        high: 10,
+        critical: 12
+    };
+    return sizeMap[severity] || 8;
+}
+
+function updateMapListPanel(anchorItem = null, nearbyItems = []) {
+    const panel = document.getElementById('map-list-panel');
+    if (!panel) return;
+
+    if (!anchorItem) {
+        panel.innerHTML = '<div class="map-list-empty">Hover or tap a pin to see nearby posts.</div>';
+        return;
+    }
+
+    const merged = new Map();
+    [...nearbyItems, { ...anchorItem, distanceKm: 0 }].forEach(item => {
+        merged.set(item.id, item);
+    });
+    const ordered = Array.from(merged.values()).sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
+
+    panel.innerHTML = ordered.map(item => {
+        const severityClass = `severity-${(item.severity || 'medium').toLowerCase()}`;
+        const distanceLabel = typeof item.distanceKm === 'number' ? formatDistance(item.distanceKm) : '';
+        return `
+            <div class="map-list-item">
+                <div>
+                    <div><strong>${item.title || 'Untitled'}</strong></div>
+                    <div class="map-list-meta">
+                        <span class="badge ${item.type}">${item.type || 'item'}</span>
+                        <span class="badge status">${(item.status || 'unknown').replace('_', ' ')}</span>
+                        <span class="badge ${severityClass}">${item.severity || 'n/a'}</span>
+                    </div>
+                </div>
+                <div class="distance-chip">${distanceLabel || '—'}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function formatDistance(distanceKm) {
+    if (distanceKm < 1) return `${Math.round(distanceKm * 1000)} m`;
+    return `${distanceKm.toFixed(1)} km`;
 }
 
 // dashboard.js

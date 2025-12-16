@@ -3,6 +3,8 @@
 require_once '../auth/config.php';
 require_once '../auth/db.php';
 
+header('Content-Type: application/json');
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -31,19 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $db = getDB();
 
-if ($city === '' || $state === '' || $country === '') {
-    try {
-        $locStmt = $db->prepare("SELECT city, state, country FROM users WHERE id = ? LIMIT 1");
-        $locStmt->execute([$_SESSION['user_id']]);
-        $locRow = $locStmt->fetch(PDO::FETCH_ASSOC);
-        if ($city === '') $city = $locRow['city'] ?? '';
-        if ($state === '') $state = $locRow['state'] ?? '';
-        if ($country === '') $country = $locRow['country'] ?? '';
-    } catch (PDOException $e) {
-        error_log('create-item location lookup error: ' . $e->getMessage());
-    }
-}
-
 // Get form data
 $type = $_POST['type'] ?? '';
 $title = trim($_POST['title'] ?? '');
@@ -56,6 +45,20 @@ $severity = $_POST['severity'] ?? 'low';
 $city = trim($_POST['city'] ?? '');
 $state = trim($_POST['state'] ?? '');
 $country = trim($_POST['country'] ?? '');
+
+// Backfill city/state/country from user profile if not provided
+if ($city === '' || $state === '' || $country === '') {
+    try {
+        $locStmt = $db->prepare("SELECT city, state, country FROM users WHERE id = ? LIMIT 1");
+        $locStmt->execute([$_SESSION['user_id']]);
+        $locRow = $locStmt->fetch(PDO::FETCH_ASSOC);
+        if ($city === '') $city = $locRow['city'] ?? '';
+        if ($state === '') $state = $locRow['state'] ?? '';
+        if ($country === '') $country = $locRow['country'] ?? '';
+    } catch (PDOException $e) {
+        error_log('create-item location lookup error: ' . $e->getMessage());
+    }
+}
 
 // Validate required fields
 if ($title === '' || $description === '' || $type === '') {

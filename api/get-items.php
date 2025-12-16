@@ -28,7 +28,7 @@ $db = getDB(); // Assuming getDB() is defined in auth/db.php which is included v
 
 try {
     // Build query dynamically based on filters
-    $sql = "SELECT i.*, u.name as user_name FROM items i JOIN users u ON i.user_id = u.id WHERE 1=1";
+    $sql = "SELECT i.*, u.name as user_name FROM items i JOIN users u ON i.user_id = u.id WHERE 1=1 AND i.id NOT IN (SELECT item_id FROM post_status_history WHERE new_status = 'deleted')";
     $params = [];
 
     if ($type !== 'all') {
