@@ -2,6 +2,11 @@
 let map;
 let markers = [];
 let mapItems = [];
+let notificationItems = [];
+let notificationTimer = null;
+let notificationUserLocation = null;
+const NOTIFICATION_RADIUS_KM = 20;
+const NOTIFICATION_POLL_MS = 30000;
 const MAP_NEARBY_RADIUS_KM = 0.5;
 let currentUser = null;
 let currentTab = 'home'; // Default tab
@@ -33,6 +38,7 @@ async function checkAuth() {
         currentUser = data.user;
         updateUI();
         loadUserData();
+        initNotifications();
 
     } catch (error) {
         console.error('Auth check failed:', error);
@@ -53,6 +59,122 @@ function updateUI() {
     document.getElementById('home-user-name').textContent = name;
     const emailNode = document.getElementById('user-email-display');
     if (emailNode) emailNode.textContent = email;
+}
+
+function initNotifications() {
+    requestNotificationLocation();
+    if (notificationTimer) clearInterval(notificationTimer);
+    pollNotifications();
+    notificationTimer = setInterval(pollNotifications, NOTIFICATION_POLL_MS);
+}
+
+function requestNotificationLocation() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            notificationUserLocation = {
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude
+            };
+        },
+        () => {},
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+    );
+}
+
+async function pollNotifications() {
+    try {
+        const params = new URLSearchParams();
+        params.append('location', 'global');
+        const response = await fetch(`api/get-items.php?${params}`);
+        const text = await response.text();
+        if (!text) return;
+        const data = JSON.parse(text);
+        if (!data.success || !Array.isArray(data.items)) return;
+
+        let nearby = data.items;
+        if (notificationUserLocation) {
+            nearby = data.items.filter(item => {
+                const lat = Number(item.location_lat);
+                const lng = Number(item.location_lng);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+                return haversineDistanceKm(notificationUserLocation.lat, notificationUserLocation.lng, lat, lng) <= NOTIFICATION_RADIUS_KM;
+            });
+        }
+
+        // Sort newest first
+        nearby.sort((a, b) => new Date(b.created_at || b.updated_at || 0) - new Date(a.created_at || a.updated_at || 0));
+
+        // Track unseen items for badge
+        const seen = new Set(notificationItems.map(i => i.id));
+        const newOnes = nearby.filter(i => !seen.has(i.id));
+        notificationItems = nearby.slice(0, 20);
+        updateNotificationBadge(newOnes.length);
+        renderNotificationsList();
+    } catch (err) {
+        console.error('Notification poll failed:', err);
+    }
+}
+
+function updateNotificationBadge(count) {
+    const badge = document.getElementById('notifications-count');
+    if (!badge) return;
+    if (count > 0) {
+        badge.textContent = String(count);
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function toggleNotificationsPanel() {
+    const panel = document.getElementById('notifications-panel');
+    if (!panel) return;
+    const isOpen = panel.style.display === 'block';
+    panel.style.display = isOpen ? 'none' : 'block';
+    if (!isOpen) {
+        updateNotificationBadge(0);
+        renderNotificationsList();
+    }
+}
+
+function renderNotificationsList() {
+    const list = document.getElementById('notifications-list');
+    if (!list) return;
+
+    if (!notificationItems.length) {
+        list.innerHTML = '<div class="notification-empty">No nearby updates yet.</div>';
+        return;
+    }
+
+    list.innerHTML = notificationItems.map(item => {
+        const color = getTypeColor(item.type);
+        const icon = getTypeIcon(item.type);
+        const lat = Number(item.location_lat);
+        const lng = Number(item.location_lng);
+        const dist = notificationUserLocation && Number.isFinite(lat) && Number.isFinite(lng)
+            ? formatDistance(haversineDistanceKm(notificationUserLocation.lat, notificationUserLocation.lng, lat, lng))
+            : 'Unknown distance';
+        const when = item.created_at ? formatDate(item.created_at) : '';
+        return `
+            <div class="notification-item">
+                <div class="notification-icon" style="background:${color}1A; color:${color}">${icon}</div>
+                <div class="notification-body">
+                    <div class="notification-title">${item.title || 'Untitled'}</div>
+                    <div class="notification-meta">${item.type || 'item'} · ${dist} · ${when}</div>
+                </div>
+            </div>`;
+    }).join('');
+}
+
+function getTypeIcon(type) {
+    const map = {
+        event: '📅',
+        issue: '⚠️',
+        notice: '📢',
+        report: '📝'
+    };
+    return map[type] || '⭐';
 }
 
 // Initialize map
@@ -103,8 +225,22 @@ function setupEventListeners() {
         }
     });
 
+    document.addEventListener('click', function(event) {
+        const wrapper = document.querySelector('.notification-wrapper');
+        const panel = document.getElementById('notifications-panel');
+        if (!wrapper || !panel) return;
+        if (!event.target.closest('.notification-wrapper')) {
+            panel.style.display = 'none';
+        }
+    });
+
     // Image preview for file uploads
     document.getElementById('form-images').addEventListener('change', previewImages);
+
+    const notifBtn = document.getElementById('notifications-btn');
+    if (notifBtn) {
+        notifBtn.addEventListener('click', toggleNotificationsPanel);
+    }
 }
 
 // Show different main tabs

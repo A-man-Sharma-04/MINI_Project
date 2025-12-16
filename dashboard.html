@@ -25,9 +25,18 @@
 
     <div class="header-right">
       <!-- Notifications -->
-      <button class="header-icon-btn" id="notifications-btn">
-        <span class="notification-badge">3</span>🔔
-      </button>
+      <div class="notification-wrapper">
+        <button class="header-icon-btn" id="notifications-btn" type="button">
+          <span class="notification-badge" id="notifications-count" style="display:none;">0</span>🔔
+        </button>
+        <div class="notification-panel" id="notifications-panel" style="display:none;">
+          <div class="notification-panel-header">Nearby updates</div>
+          <div class="notification-list" id="notifications-list">
+            <div class="notification-empty">No nearby updates yet.</div>
+          </div>
+          <div class="notification-panel-footer">Within 20 km</div>
+        </div>
+      </div>
 
       <!-- Profile Dropdown -->
       <div class="profile-dropdown">
@@ -47,7 +56,7 @@
           <hr class="dropdown-divider">
           <a href="profile.html" class="dropdown-item">My Profile</a> <!-- Link to dedicated profile page -->
           <a href="./settings.html" class="dropdown-item">Settings</a>
-          <a href="#" class="dropdown-item">Rewards</a>
+          <a href="rewards.html" class="dropdown-item">Rewards</a>
           <hr class="dropdown-divider">
           <a href="#" class="dropdown-item logout-btn" onclick="logout()">Logout</a>
         </div>

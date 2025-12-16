@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CommunityHub Rewards</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="rewards.css" />
+</head>
+<body>
+  <header class="rw-header">
+    <div class="rw-logo">Community<span>Hub</span></div>
+    <nav class="rw-nav">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="#" class="active">Rewards</a>
+      <a href="profile.html">Profile</a>
+    </nav>
+    <button class="rw-cta" onclick="window.location.href='dashboard.html'">Back to app</button>
+  </header>
+
+  <main class="rw-hero">
+    <div class="rw-hero-text">
+      <div class="rw-pill">Coming Soon</div>
+      <h1>Earn perks for every helpful action.</h1>
+      <p>Resolve issues, host events, share notices — level up your reputation and unlock community rewards. We are finalizing the reward tiers now.</p>
+      <div class="rw-actions">
+        <button class="rw-primary" id="notify-btn">Notify me</button>
+        <button class="rw-secondary" onclick="window.location.href='dashboard.html#feed'">Keep contributing</button>
+      </div>
+      <div class="rw-meter">
+        <div class="rw-meter-labels">
+          <span>Bronze</span><span>Silver</span><span>Gold</span><span>Platinum</span>
+        </div>
+        <div class="rw-meter-bar">
+          <div class="rw-meter-fill" style="width: 35%"></div>
+        </div>
+        <div class="rw-meter-note">Your current impact level will carry into Rewards.</div>
+      </div>
+    </div>
+    <div class="rw-card-grid">
+      <div class="rw-card">
+        <div class="rw-card-icon">🎟️</div>
+        <h3>Event Boosts</h3>
+        <p>Early-bird slots for local events and amplified visibility for your posts.</p>
+        <div class="rw-tag">Planned</div>
+      </div>
+      <div class="rw-card">
+        <div class="rw-card-icon">🪙</div>
+        <h3>Community Coins</h3>
+        <p>Earn coins by resolving issues or hosting meetups. Spend them on perks.</p>
+        <div class="rw-tag">Designing</div>
+      </div>
+      <div class="rw-card">
+        <div class="rw-card-icon">🛡️</div>
+        <h3>Trust Badges</h3>
+        <p>Verified helpers get profile badges and faster approvals on reports.</p>
+        <div class="rw-tag">Rolling out</div>
+      </div>
+      <div class="rw-card">
+        <div class="rw-card-icon">🎁</div>
+        <h3>Partner Offers</h3>
+        <p>Local partner discounts for consistent contributors in your city.</p>
+        <div class="rw-tag">In talks</div>
+      </div>
+    </div>
+  </main>
+
+  <section class="rw-timeline">
+    <h2>Milestones we are shipping next</h2>
+    <div class="rw-timeline-grid">
+      <div class="rw-step">
+        <div class="rw-step-head">
+          <span class="rw-step-dot"></span>
+          <span class="rw-step-title">Invite-only beta</span>
+        </div>
+        <p>We will start with active reporters and event hosts to balance rewards.</p>
+      </div>
+      <div class="rw-step">
+        <div class="rw-step-head">
+          <span class="rw-step-dot"></span>
+          <span class="rw-step-title">City leaderboards</span>
+        </div>
+        <p>Top contributors in each city get featured and unlock monthly perks.</p>
+      </div>
+      <div class="rw-step">
+        <div class="rw-step-head">
+          <span class="rw-step-dot"></span>
+          <span class="rw-step-title">Redemption hub</span>
+        </div>
+        <p>Claim partner offers, merch, or donate your rewards to local causes.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="rw-cta-final">
+    <div>
+      <h3>Want first access?</h3>
+      <p>Drop your email and we will ping you when Rewards goes live.</p>
+      <div class="rw-input-row">
+        <input type="email" id="notify-email" placeholder="you@example.com" />
+        <button class="rw-primary" id="notify-submit">Keep me posted</button>
+      </div>
+      <div class="rw-note" id="notify-note">We will only use this to notify you about Rewards.</div>
+    </div>
+  </section>
+
+  <footer class="rw-footer">
+    <div>CommunityHub · Rewards preview</div>
+    <div class="rw-footer-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="profile.html">Profile</a>
+    </div>
+  </footer>
+
+  <script src="rewards.js"></script>
+</body>
+</html>
