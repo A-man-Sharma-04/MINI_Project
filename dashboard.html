@@ -15,12 +15,6 @@
   <header class="dashboard-header">
     <div class="header-left">
       <div class="logo">Community<span>Hub</span></div>
-
-      <!-- Search Bar (Visible on all tabs) -->
-      <div class="search-container">
-        <input type="text" id="global-search" placeholder="Search..." />
-        <button class="search-btn">🔍</button>
-      </div>
     </div>
 
     <div class="header-right">
@@ -112,6 +106,55 @@
     <!-- Map Tab -->
     <section id="map-tab" class="tab-content">
       <div class="map-filters">
+        <div class="filter-group map-search-group">
+          <label>Search:</label>
+          <div class="search-container">
+            <input type="text" id="global-search" placeholder="Search keywords..." />
+            <button class="search-btn" type="button">🔍</button>
+            <div class="search-suggestions" id="search-suggestions" style="display:none;">
+              <div class="search-suggestions-header">Quick filters</div>
+              <div class="search-suggestions-body">
+                <div class="suggest-group">
+                  <div class="suggest-label">Type</div>
+                  <div class="suggest-chips" data-filter="type">
+                    <button type="button" class="suggest-chip" data-value="event">Event</button>
+                    <button type="button" class="suggest-chip" data-value="issue">Issue</button>
+                    <button type="button" class="suggest-chip" data-value="notice">Notice</button>
+                    <button type="button" class="suggest-chip" data-value="report">Report</button>
+                  </div>
+                </div>
+                <div class="suggest-group">
+                  <div class="suggest-label">Status</div>
+                  <div class="suggest-chips" data-filter="status">
+                    <button type="button" class="suggest-chip" data-value="reported">Reported</button>
+                    <button type="button" class="suggest-chip" data-value="in_progress">In Progress</button>
+                    <button type="button" class="suggest-chip" data-value="resolved">Resolved</button>
+                    <button type="button" class="suggest-chip" data-value="closed">Closed</button>
+                  </div>
+                </div>
+                <div class="suggest-group">
+                  <div class="suggest-label">Severity</div>
+                  <div class="suggest-chips" data-filter="severity">
+                    <button type="button" class="suggest-chip" data-value="low">Low</button>
+                    <button type="button" class="suggest-chip" data-value="medium">Medium</button>
+                    <button type="button" class="suggest-chip" data-value="high">High</button>
+                    <button type="button" class="suggest-chip" data-value="critical">Critical</button>
+                  </div>
+                </div>
+                <div class="suggest-group">
+                  <div class="suggest-label">Location</div>
+                  <div class="suggest-chips" data-filter="location">
+                    <button type="button" class="suggest-chip" data-value="local">Local</button>
+                    <button type="button" class="suggest-chip" data-value="city">City</button>
+                    <button type="button" class="suggest-chip" data-value="state">State</button>
+                    <button type="button" class="suggest-chip" data-value="country">Country</button>
+                    <button type="button" class="suggest-chip" data-value="global">Global</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="filter-group">
           <label>Type:</label>
           <select id="map-type-filter" onchange="filterMapItems()">
@@ -127,7 +170,7 @@
           <label>Status:</label>
           <select id="map-status-filter" onchange="filterMapItems()">
             <option value="all">All Status</option>
-            <option value="active">Active</option>
+            <option value="reported">Reported</option>
             <option value="in_progress">In Progress</option>
             <option value="resolved">Resolved</option>
             <option value="closed">Closed</option>

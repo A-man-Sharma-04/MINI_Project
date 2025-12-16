@@ -45,6 +45,7 @@ body {
   border-radius: 24px;
   padding: 0.5rem 1rem;
   background: #f8fafc;
+  position: relative;
 }
 #global-search {
   border: none;
@@ -58,6 +59,51 @@ body {
   border: none;
   cursor: pointer;
   color: #64748b;
+}
+
+.search-suggestions {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 360px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(15,23,42,0.12);
+  z-index: 1500;
+}
+
+.search-suggestions-header {
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.search-suggestions-body {
+  padding: 0.75rem 1rem 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.suggest-group { display: grid; gap: 0.4rem; }
+.suggest-label { font-size: 0.85rem; color: #475569; }
+.suggest-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.suggest-chip {
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 600;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.suggest-chip:hover { border-color: #2563eb; color: #2563eb; }
+.suggest-chip.active {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
 }
 
 .header-right {
@@ -346,6 +392,7 @@ body {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  position: relative;
 }
 .filter-group {
   display: flex;
@@ -362,6 +409,18 @@ body {
   border-radius: 6px;
 }
 
+.map-search-group {
+  flex: 1 1 240px;
+  min-width: 240px;
+  max-width: 320px;
+}
+
+.search-suggestions {
+  top: 100%;
+  left: 0;
+  right: auto;
+}
+
 .map-container {
   position: relative;
   height: 500px;
@@ -372,6 +431,35 @@ body {
 #map {
   width: 100%;
   height: 100%;
+}
+
+.map-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  gap: 0.75rem;
+}
+
+.status-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.status-btn {
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #0f172a;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.status-btn:hover {
+  border-color: #2563eb;
+  color: #2563eb;
 }
 
 .map-circle-marker {

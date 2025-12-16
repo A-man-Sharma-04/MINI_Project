@@ -5,6 +5,8 @@ let mapItems = [];
 let notificationItems = [];
 let notificationTimer = null;
 let notificationUserLocation = null;
+let globalSearchTerm = '';
+const STATUS_OPTIONS = ['reported', 'in_progress', 'resolved', 'closed'];
 const NOTIFICATION_RADIUS_KM = 20;
 const NOTIFICATION_POLL_MS = 30000;
 const MAP_NEARBY_RADIUS_KM = 0.5;
@@ -39,6 +41,9 @@ async function checkAuth() {
         updateUI();
         loadUserData();
         initNotifications();
+        if (currentTab === 'home') {
+            loadHomeContent();
+        }
 
     } catch (error) {
         console.error('Auth check failed:', error);
@@ -234,6 +239,96 @@ function setupEventListeners() {
         }
     });
 
+    const mapList = document.getElementById('map-list-panel');
+    if (mapList) {
+        mapList.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.status-btn');
+            if (!btn) return;
+            const itemId = Number(btn.dataset.id);
+            const status = btn.dataset.status;
+            if (!itemId || !STATUS_OPTIONS.includes(status)) return;
+            await updateItemStatus(itemId, status);
+        });
+    }
+
+    // Search interactions
+    const searchInput = document.getElementById('global-search');
+    const searchBtn = document.querySelector('.search-btn');
+    const searchPanel = document.getElementById('search-suggestions');
+    if (searchInput) {
+        searchInput.addEventListener('focus', () => toggleSearchPanel(true));
+        searchInput.addEventListener('input', () => toggleSearchPanel(true));
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyFiltersAndSearch();
+            }
+        });
+    }
+    if (searchBtn && searchInput) {
+        searchBtn.addEventListener('click', () => applyFiltersAndSearch());
+    }
+    if (searchPanel) {
+        searchPanel.addEventListener('click', (e) => {
+            const chip = e.target.closest('.suggest-chip');
+            if (!chip) return;
+            const group = chip.parentElement?.dataset.filter;
+            const value = chip.dataset.value || '';
+
+            // toggle active state (multi-select within group)
+            const isActive = chip.classList.contains('active');
+            chip.classList.toggle('active');
+
+            if (group === 'type') {
+                const el = document.getElementById('map-type-filter');
+                if (el) {
+                    if (isActive) {
+                        el.value = 'all';
+                    } else {
+                        el.value = value;
+                    }
+                }
+            } else if (group === 'status') {
+                const el = document.getElementById('map-status-filter');
+                if (el) {
+                    if (isActive) {
+                        el.value = 'all';
+                    } else {
+                        el.value = value;
+                    }
+                }
+            } else if (group === 'severity') {
+                const el = document.getElementById('map-severity-filter');
+                if (el) {
+                    if (isActive) {
+                        el.value = 'all';
+                    } else {
+                        el.value = value;
+                    }
+                }
+            } else if (group === 'location') {
+                const trendLoc = document.getElementById('trending-location-filter');
+                if (trendLoc) {
+                    if (isActive) {
+                        trendLoc.value = 'global';
+                    } else {
+                        trendLoc.value = value;
+                    }
+                }
+            }
+
+            applyFiltersAndSearch();
+        });
+    }
+
+    document.addEventListener('click', (e) => {
+        const searchContainer = document.querySelector('.search-container');
+        if (!searchContainer) return;
+        if (!e.target.closest('.search-container')) {
+            toggleSearchPanel(false);
+        }
+    });
+
     // Image preview for file uploads
     document.getElementById('form-images').addEventListener('change', previewImages);
 
@@ -365,6 +460,9 @@ async function loadMapItems() {
         params.append('type', document.getElementById('map-type-filter').value);
         params.append('status', document.getElementById('map-status-filter').value);
         params.append('severity', document.getElementById('map-severity-filter').value);
+        if (globalSearchTerm) {
+            params.append('search', globalSearchTerm);
+        }
 
         const response = await fetch(`api/get-items.php?${params}`, { credentials: 'same-origin' });
         if (!response.ok) {
@@ -504,6 +602,7 @@ function showClusterList(group) {
         <div class="map-list-cluster-head">${group.items.length} posts at this spot</div>
         ${sorted.map(item => {
             const severityClass = `severity-${(item.severity || 'medium').toLowerCase()}`;
+            const statusActions = renderStatusActions(item);
             return `
                 <div class="map-list-item">
                     <div>
@@ -514,6 +613,7 @@ function showClusterList(group) {
                             <span class="badge ${severityClass}">${item.severity || 'n/a'}</span>
                         </div>
                     </div>
+                    ${statusActions}
                 </div>`;
         }).join('')}`;
 }
@@ -562,6 +662,14 @@ function getSeverityRadius(severity) {
     return sizeMap[severity] || 8;
 }
 
+function renderStatusActions(item) {
+    if (!item || !item.id) return '';
+    const current = (item.status || '').toLowerCase();
+    const nextStatuses = STATUS_OPTIONS.filter(s => s !== current);
+    const btns = nextStatuses.slice(0, 2).map(s => `<button class="status-btn" data-id="${item.id}" data-status="${s}">${s.replace('_',' ')}</button>`).join('');
+    return `<div class="status-actions">${btns}</div>`;
+}
+
 function updateMapListPanel(anchorItem = null, nearbyItems = []) {
     const panel = document.getElementById('map-list-panel');
     if (!panel) return;
@@ -580,6 +688,7 @@ function updateMapListPanel(anchorItem = null, nearbyItems = []) {
     panel.innerHTML = ordered.map(item => {
         const severityClass = `severity-${(item.severity || 'medium').toLowerCase()}`;
         const distanceLabel = typeof item.distanceKm === 'number' ? formatDistance(item.distanceKm) : '';
+        const statusActions = renderStatusActions(item);
         return `
             <div class="map-list-item">
                 <div>
@@ -591,6 +700,7 @@ function updateMapListPanel(anchorItem = null, nearbyItems = []) {
                     </div>
                 </div>
                 <div class="distance-chip">${distanceLabel || '—'}</div>
+                ${statusActions}
             </div>
         `;
     }).join('');
@@ -1217,5 +1327,38 @@ function logout() {
             .then(() => {
                 window.location.href = 'index.html';
             });
+    }
+}
+
+function toggleSearchPanel(show) {
+    const panel = document.getElementById('search-suggestions');
+    if (!panel) return;
+    panel.style.display = show ? 'block' : 'none';
+}
+
+function applyFiltersAndSearch() {
+    const searchInput = document.getElementById('global-search');
+    globalSearchTerm = searchInput ? searchInput.value.trim() : '';
+    loadMapItems();
+    showToast(globalSearchTerm ? `Searching for "${globalSearchTerm}"` : 'Showing all');
+}
+
+async function updateItemStatus(itemId, status) {
+    try {
+        const res = await fetch('api/update-status.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_id: itemId, status })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Status updated');
+            await loadMapItems();
+        } else {
+            showToast(data.message || 'Failed to update status');
+        }
+    } catch (err) {
+        console.error('Status update failed', err);
+        showToast('Failed to update status');
     }
 }
