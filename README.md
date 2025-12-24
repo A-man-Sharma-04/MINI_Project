@@ -55,4 +55,4 @@ A lightweight PHP/MySQL community incident board with map-based browsing, filter
 - Open issues with repro steps and environment details.
 
 ## License
-Specify your license of choice (MIT/Apache-2.0/etc.).
+CommunityHub Proprietary License (Permission Required). See [LICENSE](LICENSE) for full terms.
